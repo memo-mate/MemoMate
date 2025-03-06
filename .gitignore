@@ -1,0 +1,19 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+data
+langchain_examples
+.env
+.DS_Store
+.pytest_cache
+.ruff_cache
+__pycache__
+bge-large-zh-v1.5
+.python-version

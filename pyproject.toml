@@ -1,0 +1,64 @@
+[project]
+name = "agent-demo"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "httpx[socks]>=0.28.1",
+    "huggingface-hub>=0.29.1",
+    "lancedb>=0.20.0",
+    "langchain>=0.3.19",
+    "langchain-chroma>=0.2.2",
+    "langchain-community>=0.3.18",
+    "langchain-huggingface>=0.1.2",
+    "langchain-ollama>=0.2.3",
+    "langchain-openai>=0.3.7",
+    "langgraph>=0.3.2",
+    "pandas>=2.2.3",
+    "rich>=13.9.4",
+]
+
+[dependency-groups]
+dev = [
+    "coverage>=7.6.12",
+    "ipython>=8.32.0",
+    "markitdown>=0.0.1",
+    "mypy>=1.15.0",
+    "pandas-stubs>=2.2.3.241126",
+    "pre-commit>=4.1.0",
+    "pytest>=8.3.4",
+    "ruff>=0.9.7",
+    "types-passlib>=1.7.7.20241221",
+]
+
+[tool.mypy]
+strict = true
+exclude = ["venv", ".venv", "alembic"]
+
+[tool.ruff]
+target-version = "py312"
+exclude = ["alembic", "scripts"]
+line-length = 120
+
+[tool.ruff.lint]
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # pyflakes
+    "I",      # isort
+    "B",      # flake8-bugbear
+    "C4",     # flake8-comprehensions
+    "UP",     # pyupgrade
+    "ARG001", # unused arguments in functions
+]
+ignore = [
+    "E501", # line too long, handled by black
+    "B008", # do not perform function calls in argument defaults
+    "W191", # indentation contains tabs
+    "B904", # Allow raising exceptions without from e, for HTTPException
+]
+
+[tool.ruff.lint.pyupgrade]
+# Preserve types, even if a file imports `from __future__ import annotations`.
+keep-runtime-typing = true
