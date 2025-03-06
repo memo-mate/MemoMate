@@ -1,4 +1,3 @@
-
 from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
 from rich import inspect, print  # noqa
@@ -13,7 +12,7 @@ embeddings = HuggingFaceEmbeddings(
 vector_store = Chroma(
     collection_name="example_collection",
     embedding_function=embeddings,
-    persist_directory="./chroma_langchain_db",
+    persist_directory="./data/memo_db",
 )
 
 
