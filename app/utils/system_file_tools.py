@@ -28,13 +28,15 @@ def get_all_files_in_dir(dir_path: Path) -> list[Path]:
     return results
 
 
-# print(get_all_files_in_dir("./Miner2PdfAndWord_Markitdown2Excel"))
-
-paths = list(Path("Miner2PdfAndWord_Markitdown2Excel").glob("**/*"))
-paths = [str(path) for path in paths]
-columns = Columns(
-    paths,
-    equal=True,
-    expand=True,
-)
-print(columns)
+if __name__ == "__main__":
+    # print(get_all_files_in_dir("./Miner2PdfAndWord_Markitdown2Excel"))
+    paths = list(Path("./data/Miner2PdfAndWord_Markitdown2Excel").glob("**/*"))
+    # 过滤 Mac 系统文件.DS_Store 和 .开头的隐藏文件
+    paths = filter(lambda x: x.is_file() and not x.name.startswith("."), paths)
+    paths = [str(path) for path in paths]
+    columns = Columns(
+        paths,
+        equal=True,
+        expand=True,
+    )
+    print(columns)
