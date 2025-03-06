@@ -17,6 +17,7 @@ dependencies = [
     "langgraph>=0.3.2",
     "pandas>=2.2.3",
     "rich>=13.9.4",
+    "unstructured[md]>=0.16.23",
 ]
 
 [dependency-groups]

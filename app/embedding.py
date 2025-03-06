@@ -1,4 +1,6 @@
 from langchain_chroma import Chroma
+from langchain_community.document_loaders import DirectoryLoader
+from langchain_text_splitters import CharacterTextSplitter, MarkdownHeaderTextSplitter, MarkdownTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 from rich import inspect, print  # noqa
 
@@ -64,3 +66,22 @@ def test_embedding_model():
     else:
         print("验证失败。请检查模型是否正确加载。")
         return False
+
+
+def load_documents(dir):
+    loader = DirectoryLoader(dir)
+    documents = loader.load()
+    # 使用 MarkdownTextSplitter 分割文档，chunk 大小为 3200，重叠 30
+    text_spliter = MarkdownTextSplitter(chunk_size=3200, chunk_overlap=30)
+    split_docs = text_spliter.split_documents(documents)
+    return split_docs
+
+
+def main() -> None:
+    # need unstructured[md]
+    documents = load_documents("./data/Miner2PdfAndWord_Markitdown2Excel")
+    print(documents)
+
+
+if __name__ == "__main__":
+    main()
