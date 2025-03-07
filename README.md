@@ -13,3 +13,15 @@ flowchart TD
     G --> F(数据+问题--> LLM)
     F --> D
 ```
+### 配置环境
+
+```bash
+uv venv -p 3.12
+uv sync
+```
+
+### 下载bge
+
+```bash
+huggingface-cli download BAAI/bge-large-zh-v1.5 --local-dir ./bge-large-zh-v1.5
+```

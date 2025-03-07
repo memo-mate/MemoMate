@@ -1,0 +1,11 @@
+---
+description: python的包管理工具使用的是 uv
+globs: 
+alwaysApply: false
+---
+
+# 包管理工具
+
+- 使用 UV 作为Python包管理工具。
+- 当 UV 使用不了的时候，尝试使用 uv pip xxxx执行 pip 命令。
+- 使用命令行工具的时候，可以使用 uvx xxx来执行。

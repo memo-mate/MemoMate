@@ -23,6 +23,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "coverage>=7.6.12",
+    "huggingface-hub[cli]>=0.29.1",
     "ipython>=8.32.0",
     "markitdown>=0.0.1",
     "mypy>=1.15.0",

@@ -42,8 +42,10 @@ def transfer_file(file_path: str | Path) -> None:
 
 def gen_file_list(
     data_dir: Path = Path("./Test_Data"),
-    suffix_list: list[str] = [".pdf", ".docx", ".doc", ".pptx", ".ppt"],
+    suffix_list: list[str] = None,
 ) -> list[str | Path]:
+    if suffix_list is None:
+        suffix_list = [".pdf", ".docx", ".doc", ".pptx", ".ppt"]
     file_list = []
     for root, dirs, files in os.walk(data_dir):
         for file in files:
