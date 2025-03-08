@@ -3,6 +3,16 @@ import uuid
 from pathlib import Path
 
 import httpx
+from langchain.document_loaders import (
+    MathpixPDFLoader,
+    PDFMinerLoader,
+    PDFPlumberLoader,
+    PyMuPDFLoader,
+    PyPDFDirectoryLoader,
+    PyPDFium2Loader,
+    PyPDFLoader,
+    UnstructuredPDFLoader,
+)
 from markitdown import MarkItDown
 from rich import print  # noqa
 

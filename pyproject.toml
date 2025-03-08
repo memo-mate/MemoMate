@@ -16,7 +16,9 @@ dependencies = [
     "langchain-openai>=0.3.7",
     "langgraph>=0.3.2",
     "pandas>=2.2.3",
+    "pymupdf>=1.25.3",
     "rich>=13.9.4",
+    "tavily-python>=0.5.1",
     "unstructured[md]>=0.16.23",
 ]
 

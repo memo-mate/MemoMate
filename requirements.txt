@@ -1,0 +1,10 @@
+# PDF处理相关依赖
+pymupdf>=1.23.0  # PyMuPDF，用于PDF解析
+pillow>=9.5.0   # 用于图像处理
+pandas>=2.0.0   # 用于表格数据处理
+
+# Langchain相关依赖
+langchain-community>=0.0.10  # Langchain社区组件
+
+# CLI工具相关依赖
+rich>=13.5.0    # 美化终端输出 

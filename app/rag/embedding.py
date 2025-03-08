@@ -1,8 +1,16 @@
+import uuid
+from io import BytesIO
+from typing import Generator
+
+from chromadb import Settings
 from langchain_chroma import Chroma
 from langchain_community.document_loaders import DirectoryLoader
-from langchain_text_splitters import CharacterTextSplitter, MarkdownHeaderTextSplitter, MarkdownTextSplitter
+from langchain_core.documents.base import Document
 from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_text_splitters import CharacterTextSplitter, MarkdownHeaderTextSplitter, MarkdownTextSplitter
 from rich import inspect, print  # noqa
+
+from app.configs import settings
 
 # 使用模型名称，HuggingFace会自动处理下载和缓存
 embeddings = HuggingFaceEmbeddings(
@@ -15,7 +23,10 @@ vector_store = Chroma(
     collection_name="example_collection",
     embedding_function=embeddings,
     persist_directory="./data/memo_db",
+    client_settings=Settings(anonymized_telemetry=False),
 )
+
+# collection = vector_store.get_or_create_collection("example_collection")
 
 
 # 测试embedding模型是否生效
@@ -68,19 +79,39 @@ def test_embedding_model():
         return False
 
 
-def load_documents(dir):
-    loader = DirectoryLoader(dir)
+def load_documents(dir: str) -> Generator[Document, None, None]:
+    loader = DirectoryLoader(dir, glob="**/*.md")
     documents = loader.load()
+    if not documents:
+        raise ValueError("文档目录为空")
     # 使用 MarkdownTextSplitter 分割文档，chunk 大小为 3200，重叠 30
-    text_spliter = MarkdownTextSplitter(chunk_size=3200, chunk_overlap=30)
+    text_spliter = MarkdownTextSplitter(chunk_size=settings.chunk_size, chunk_overlap=settings.chunk_overlap)
+
+    # 分割文档
     split_docs = text_spliter.split_documents(documents)
-    return split_docs
+    for doc in split_docs:
+        # 添加 doc_id
+        doc.metadata["doc_id"] = str(uuid.uuid4())
+        yield doc
+
+
+def load_documents_from_io(file: BytesIO) -> Document:
+    return Document(
+        page_content=file.read(),
+        metadata={
+            "source": file.name,
+            "doc_id": str(uuid.uuid4()),
+        },
+    )
 
 
 def main() -> None:
     # need unstructured[md]
     documents = load_documents("./data/Miner2PdfAndWord_Markitdown2Excel")
     print(documents)
+
+    # 向量存储
+    vector_store.add_documents(documents)
 
 
 if __name__ == "__main__":
