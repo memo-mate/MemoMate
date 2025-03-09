@@ -1,13 +1,13 @@
 import uuid
+from collections.abc import Generator
 from io import BytesIO
-from typing import Generator
 
 from chromadb import Settings
 from langchain_chroma import Chroma
 from langchain_community.document_loaders import DirectoryLoader
 from langchain_core.documents.base import Document
 from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_text_splitters import CharacterTextSplitter, MarkdownHeaderTextSplitter, MarkdownTextSplitter
+from langchain_text_splitters import CharacterTextSplitter, MarkdownHeaderTextSplitter, MarkdownTextSplitter  # noqa
 from rich import inspect, print  # noqa
 
 from app.configs import settings

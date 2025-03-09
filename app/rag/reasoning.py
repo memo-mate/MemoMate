@@ -1,4 +1,4 @@
-from langchain_core.messages import AnyMessage
+from langchain_core.messages import AIMessage, AnyMessage
 from langchain_core.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
 
@@ -85,4 +85,10 @@ def process_rag(
     )
 
     response = llm.invoke(prompt)
+    if isinstance(response, AIMessage):
+        usage = response.usage_metadata
+        input_tokens = usage["input_tokens"] if usage else "unknown"
+        output_tokens = usage["output_tokens"] if usage else "unknown"
+        print(f"流量计费 [Qwen/QwQ-32B]: [输入 token: {input_tokens}][输出 token: {output_tokens}]")
+
     return response.content
