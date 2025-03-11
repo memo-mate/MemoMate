@@ -1,52 +1,36 @@
 from fastapi import FastAPI
-from app.routers import auth
-from app.database import engine
-from app.models.login_model import Base
-from app.config.log_config import get_logger
-import uvicorn
-from app.middleware.rate_limit import RateLimitMiddleware
+from fastapi.routing import APIRoute
+from starlette.middleware.cors import CORSMiddleware
 
-logger = get_logger(__name__)
+from app.api.main import api_router
+from app.core.config import settings
+from app.core.responses import CustomORJSONResponse
+from app.utils.custom_logging import setup_logging
 
-def create_app() -> FastAPI:
-    # 创建数据库表
-    Base.metadata.create_all(bind=engine)
-    
-    # 创建FastAPI应用
-    app = FastAPI()
-    
-    # 添加速率限制中间件
-    app.add_middleware(RateLimitMiddleware, max_requests=100, window_size=60)
-    
-    # 包含路由
-    app.include_router(auth.router, prefix="/auth", tags=["auth"])
-    
-    @app.get("/")
-    def read_root():
-        logger.info("访问了根路径")
-        return {"message": "Welcome to the login app"}
+setup_logging()
 
-    @app.on_event("startup")
-    async def startup_event():
-        logger.info("应用启动")
 
-    @app.on_event("shutdown")
-    async def shutdown_event():
-        logger.info("应用关闭")
-        
-    return app
+def custom_generate_unique_id(route: APIRoute) -> str:
+    return f"{route.tags[0]}-{route.name}"
 
-def main():
-    logger.info("正在启动应用...")
-    app = create_app()
-    uvicorn.run(
-        app,
-        host="0.0.0.0",
-        port=8000,
-        reload=False,  # 在主函数中直接运行时，不需要reload
-        log_level="info",
-        access_log=True
+
+app = FastAPI(
+    title=settings.PROJECT_NAME,
+    docs_url=f"{settings.API_V1_STR}/docs",
+    redoc_url=f"{settings.API_V1_STR}/redoc",
+    openapi_url=f"{settings.API_V1_STR}/openapi.json",
+    generate_unique_id_function=custom_generate_unique_id,
+    default_response_class=CustomORJSONResponse,
+)
+
+# Set all CORS enabled origins
+if settings.all_cors_origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.all_cors_origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
     )
 
-if __name__ == "__main__":
-    main()
+app.include_router(api_router, prefix=settings.API_V1_STR)

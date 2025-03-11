@@ -1,0 +1,32 @@
+# Python相关文件
+__pycache__/
+*.py[cod]
+dist/
+wheels/
+*.egg-info
+.mypy_cache
+.coverage
+htmlcov
+.cache
+app.egg-info
+
+# 虚拟环境
+.venv
+.env
+.python-version
+
+# 测试和代码检查
+.pytest_cache
+.ruff_cache
+
+# 本地数据
+data/
+langchain_examples
+data/postgres-data
+data/redis-data
+data/pgadmin-data
+bge-*
+
+# 操作系统和本地环境文件
+.DS_Store
+.env.local

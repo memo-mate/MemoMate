@@ -1,0 +1,89 @@
+x-restart: &restart_policy
+  restart: unless-stopped
+  deploy:
+    restart_policy:
+      condition: on-failure
+      delay: 60s
+
+services:
+  backend:
+    <<: *restart_policy
+    image: memo/memo-fastapi-backend:latest
+    env_file:
+      # 环境变量配置
+      - .env
+    entrypoint: ["fastapi", "run", "--workers", "4", "app/main.py"]
+    depends_on:
+      - redis
+      - postgres
+  memo-frontend:
+    <<: *restart_policy
+    image: memo/memo-fastapi-frontend:latest
+    ports:
+      - "53001:8080"
+    depends_on:
+      - memo-backend
+  redis:
+    <<: *restart_policy
+    image: redis:latest
+    env_file:
+      - .env
+    command: >
+      redis-server
+      --bind 0.0.0.0
+      --requirepass $REDIS_PASSWORD
+      --appendonly yes
+      --rename-command KEYS ""
+    volumes:
+      - ./data/redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli -h localhost -p 6379 -a $REDIS_PASSWORD ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  postgres:
+    <<: *restart_policy
+    image: postgres:16.3
+    env_file:
+      - .env
+    environment:
+      - TZ=Asia/Shanghai
+      - POSTGRES_SERVER=db
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - ./data/postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+  pgadmin:
+    <<: *restart_policy
+    image: elestio/pgadmin:latest
+    depends_on:
+      - postgres
+    deploy:
+      replicas: 0
+    ports:
+      - "53002:5050"
+    environment:
+      - TZ=Asia/Shanghai
+      - PGADMIN_LISTEN_PORT=5050
+      - PGADMIN_DEFAULT_EMAIL=memo-fastapi@memo.com
+      - PGADMIN_DEFAULT_PASSWORD=memo.fastapi
+    volumes:
+      - ./data/pgadmin-data:/var/lib/pgadmin
+
+# 配置文件
+# configs:
+#   redis-conf:
+#     content: |
+#       port 6379
+#       bind 0.0.0.0
+#       appendonly yes
+#       requirepass password
+
+#       rename-command KEYS ""
