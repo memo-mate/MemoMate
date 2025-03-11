@@ -1,5 +1,6 @@
 import uuid
 from collections.abc import Generator
+from enum import StrEnum
 from io import BytesIO
 
 from chromadb import Settings
@@ -12,11 +13,19 @@ from rich import inspect, print  # noqa
 
 from app.configs import settings
 
+
+class EmbeddingDriverEnum(StrEnum):
+    MAC = "mps"
+    CPU = "cpu"
+    CUDA = "cuda"
+    NPU = "npu"
+
+
 # 使用模型名称，HuggingFace会自动处理下载和缓存
 embeddings = HuggingFaceEmbeddings(
     model_name="/Users/datagrand/Code/agent-demo/bge-large-zh-v1.5",
     encode_kwargs={"normalize_embeddings": True},
-    model_kwargs={"device": "mps"},
+    model_kwargs={"device": EmbeddingDriverEnum.MAC.value},
 )
 
 vector_store = Chroma(

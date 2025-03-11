@@ -1,7 +1,6 @@
 import base64
 from pathlib import Path
 
-import pandas as pd
 import pymupdf
 from langchain_community.document_loaders import PyMuPDFLoader
 from rich import print

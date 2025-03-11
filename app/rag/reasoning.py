@@ -13,22 +13,47 @@ def process_rag(
     is_web_search: bool = False,
 ) -> str:
     prompt = PromptTemplate.from_template(
-        """
-        ## 任务
-        你是问题排查的小助手，根据用户问题{note_time}，结合网络搜索结果和数据库查询结果、历史记录，给出回答。
+        """## 任务
+你是问题排查的小助手，根据用户问题{note_time}，结合网络搜索结果和数据库查询结果、历史记录，给出回答。
 
-        ## 用户问题
-        {query}
+## 用户问题
+{query}
 
-        ## 网络搜索结果
-        {web_search_result}
+## 网络搜索结果
+{web_search_result}
 
-        ## 数据库查询结果
-        {db_search_result}
+## 数据库查询结果
+{db_search_result}
 
-        ## 历史记录
-        {history}
-        """
+## 历史记录
+{history}
+
+## 注意
+1. 请优先使用最新信息
+2. 请根据历史记录和知识库回答问题
+3. 请根据网络搜索结果回答问题
+4. 请根据数据库查询结果回答问题
+5. 请根据用户问题回答问题
+
+## 输出格式
+[{
+    "answer": "回答内容",
+    "source": "来源",
+},
+{
+    "answer": "回答内容",
+    "source": "来源",
+},
+...
+]
+
+## 输出示例
+[{
+    "answer": "马子坤是数据港的员工",
+    "source": "数据库",
+}]
+
+回答:"""
     )
     # 时间敏感检测
     time_sensitive = any(word in query for word in ["今天", "最新", "今年", "当前", "最近", "刚刚", "现在", "如今"])

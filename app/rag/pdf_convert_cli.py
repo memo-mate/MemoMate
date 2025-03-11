@@ -10,13 +10,11 @@
 """
 
 import argparse
-import os
 import sys
 import time
 from pathlib import Path
-from typing import List
 
-from pdf_to_md import PDFToMarkdown, pdf_to_markdown
+from pdf_to_md import PDFToMarkdown
 from rich import print
 from rich.console import Console
 from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
@@ -54,7 +52,7 @@ def process_single_file(pdf_path: str | Path, output_path: str | Path = None, sa
 
 def process_directory(
     input_dir: str | Path, output_dir: str | Path = None, recursive: bool = False, save_images: bool = False
-) -> List[str]:
+) -> list[str]:
     """处理目录中的所有PDF文件。
 
     Args:

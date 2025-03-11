@@ -27,6 +27,7 @@ dev = [
     "coverage>=7.6.12",
     "huggingface-hub[cli]>=0.29.1",
     "ipython>=8.32.0",
+    "langchain-cli>=0.0.36",
     "markitdown>=0.0.1",
     "mypy>=1.15.0",
     "pandas-stubs>=2.2.3.241126",

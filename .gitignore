@@ -15,5 +15,7 @@ langchain_examples
 .pytest_cache
 .ruff_cache
 __pycache__
-bge-large-zh-v1.5
 .python-version
+
+# 模型文件
+bge-*
