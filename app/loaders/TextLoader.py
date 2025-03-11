@@ -11,6 +11,7 @@ from app.core.config import (
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from app.core.db import init_database
 import uuid
+import json
 
 
 class TextLoader:
@@ -20,9 +21,11 @@ class TextLoader:
         )
         self.text_splitter = RecursiveCharacterTextSplitter(**TEXT_SPLITTER_CONFIG)
         self.connection = init_database()
+        self.file_path = None
 
     def _read_txt_file(self, file_path):
         with open(file_path, "r", encoding="utf-8") as file:
+            self.file_path = file_path
             return file.read()
 
     def _split_text(self, text):
@@ -48,12 +51,12 @@ class TextLoader:
                 "vector": vector,
                 "text": text,
                 "source": source,
-                "metadata": "",
+                "metadata": json.dumps({"file_path": self.file_path}),
             }
 
             # 添加到表中
             table.add([data])
-            logger.info(f"已写入: {text[:30]}...")
+        logger.info(f"文件{self.file_path}已写入数据库")
 
     @logger.catch
     def process_file(self, file_path):

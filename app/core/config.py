@@ -7,8 +7,8 @@ TABLE_NAME = "pyy"
 
 # 文本分割配置
 TEXT_SPLITTER_CONFIG = {
-    "chunk_size": 300,
-    "chunk_overlap": 50,
+    "chunk_size": 2000,
+    "chunk_overlap": 100,
     "separators": ["\n\n", "\n", "。", "！", "？"],
 }
 

@@ -5,6 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "diagrams>=0.24.3",
     "fitz>=0.0.1.dev2",
     "lancedb>=0.20.0",
     "langchain-community>=0.3.18",
@@ -12,11 +13,13 @@ dependencies = [
     "langchain-text-splitters>=0.3.6",
     "loguru>=0.7.3",
     "markitdown>=0.0.1",
+    "matplotlib>=3.10.1",
     "mypy>=1.15.0",
     "openai>=1.65.4",
     "pandas>=2.2.3",
     "pyarrow>=19.0.1",
     "pymupdf>=1.25.3",
+    "python-docx>=1.1.2",
     "python-dotenv>=1.0.1",
     "sentence-transformers>=3.4.1",
 ]

@@ -46,7 +46,9 @@ class VectorSearch:
         processed_results = []
         for item in results:
             text = item["text"]
-            score = item["_distance"]
+            # 将距离转换为相似度：1/(1+distance)，这样距离越小，相似度越接近1
+            distance = item["_distance"]
+            similarity = 1 / (1 + distance)  # 转换为0-1之间的相似度值
             metadata = {"source": item["source"], "id": item["id"]}
 
             # 如果metadata字段是JSON字符串，解析它
@@ -59,7 +61,7 @@ class VectorSearch:
                     metadata["metadata"] = item["metadata"]
 
             doc = Document(page_content=text, metadata=metadata)
-            processed_results.append((doc, score))
+            processed_results.append((doc, similarity))
 
         return processed_results
 
@@ -83,12 +85,12 @@ class VectorSearch:
 # 使用示例
 if __name__ == "__main__":
     searcher = VectorSearch()
-    query = "提供一下chrome插件问题排查的解决方案"
+    query = "CTE导致节点宕机"
     results = searcher.similarity_search(query)
 
     print(f"提问：{query}")
-    for i, (doc, score) in enumerate(results):
-        print(f"结果{i+1}：  （相似度：{score:.3f}）:")
+    for i, (doc, similarity) in enumerate(results):
+        print(f"结果{i+1}：  （相似度：{similarity:.3f}）:")
         print(f"内容：  {doc.page_content}")
         print(f'来源：  {doc.metadata["source"]}')
         if "page" in doc.metadata:

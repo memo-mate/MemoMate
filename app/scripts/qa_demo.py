@@ -50,24 +50,24 @@ class KnowledgeBaseQA:
 
     def _get_context(self, query):
         """从向量数据库获取相关上下文"""
-        results = self.vector_search.similarity_search(query, k=3)
+        results = self.vector_search.similarity_search(query, k=20)
 
         # 打印检索结果，用于评估质量
-        print("\n===== 向量检索结果 =====")
-        for i, (doc, score) in enumerate(results):
-            source = doc.metadata.get("source", "未知来源")
-            page = doc.metadata.get("page", "")
-            page_info = f"(第{page}页)" if page else ""
+        # print("\n===== 向量检索结果 =====")
+        # for i, (doc, score) in enumerate(results):
+        #     source = doc.metadata.get("source", "未知来源")
+        #     page = doc.metadata.get("page", "")
+        #     page_info = f"(第{page}页)" if page else ""
 
-            print(f"[文档{i+1}] 相似度: {score:.4f}")
-            print(f"来源: {source}{page_info}")
-            print(
-                f"内容: {doc.page_content[:150]}..."
-                if len(doc.page_content) > 150
-                else f"内容: {doc.page_content}"
-            )
-            print("-" * 50)
-        print("========================\n")
+        #     print(f"[文档{i+1}] 相似度: {score:.4f}")
+        #     print(f"来源: {source}{page_info}")
+        #     print(
+        #         f"内容: {doc.page_content[:150]}..."
+        #         if len(doc.page_content) > 150
+        #         else f"内容: {doc.page_content}"
+        #     )
+        #     print("-" * 50)
+        # print("========================\n")
 
         # 格式化上下文
         context_texts = []
@@ -133,7 +133,8 @@ class KnowledgeBaseQA:
 
 # 使用示例
 if __name__ == "__main__":
-    question = "提供一下chrome插件问题排查的解决方案"
+    question = "根据2024年10月周报，总结一下10月的工作内容"
+    print(f"提问：{question}\n")
     try:
         qa_system = KnowledgeBaseQA()
         answer = qa_system.answer_question(question)
