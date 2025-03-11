@@ -65,6 +65,29 @@ class VectorSearch:
 
         return processed_results
 
+    def as_retriever(self, k=5):
+        """
+        返回一个retriever对象，包含get_relevant_documents方法
+
+        Args:
+            k: 返回的结果数量
+
+        Returns:
+            包含get_relevant_documents方法的retriever对象
+        """
+
+        class VectorSearchRetriever:
+            def __init__(self, vector_search, k):
+                self.vector_search = vector_search
+                self.k = k
+
+            def get_relevant_documents(self, query):
+                results = self.vector_search.similarity_search(query, k=self.k)
+                # 只返回文档部分，不返回相似度分数
+                return [doc for doc, _ in results]
+
+        return VectorSearchRetriever(self, k)
+
     def vector_exists(self, text: str) -> bool:
         results = self.vector_store.as_retriever(
             search_type="similarity", search_kwargs={"k": 1, "score_threshold": 0.99}

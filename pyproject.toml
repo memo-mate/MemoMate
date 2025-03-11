@@ -10,6 +10,7 @@ dependencies = [
     "lancedb>=0.20.0",
     "langchain-community>=0.3.18",
     "langchain-huggingface>=0.1.2",
+    "langchain-openai>=0.3.8",
     "langchain-text-splitters>=0.3.6",
     "loguru>=0.7.3",
     "markitdown>=0.0.1",
@@ -19,7 +20,9 @@ dependencies = [
     "pandas>=2.2.3",
     "pyarrow>=19.0.1",
     "pymupdf>=1.25.3",
+    "pypdf>=5.3.1",
     "python-docx>=1.1.2",
     "python-dotenv>=1.0.1",
+    "rich>=13.9.4",
     "sentence-transformers>=3.4.1",
 ]
