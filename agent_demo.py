@@ -2,14 +2,16 @@ import os
 import tempfile
 
 import requests
+import rich
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.chains.retrieval import create_retrieval_chain
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.document_loaders import PyPDFLoader
+from langchain_community.document_loaders import DirectoryLoader, PyPDFLoader
 from langchain_community.vectorstores import Chroma
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_openai import ChatOpenAI
+from langchain_text_splitters import MarkdownTextSplitter
 from rich.prompt import Prompt
 
 from app.configs import settings
@@ -55,10 +57,39 @@ class Assistant:
 
         return vectordb
 
+    def load_local_md_files(self):
+        dir_path = "./data/Miner2PdfAndWord_Markitdown2Excel"
+        loader = DirectoryLoader(dir_path, glob="**/*.md")
+        documents = loader.load()
+        if not documents:
+            raise ValueError("文档目录为空")
+        # 使用 MarkdownTextSplitter 分割文档，chunk 大小为 3200，重叠 30
+        text_spliter = MarkdownTextSplitter(chunk_size=settings.chunk_size, chunk_overlap=settings.chunk_overlap)
+
+        # 分割文档
+        split_docs = text_spliter.split_documents(documents)
+
+        # 创建向量存储
+        embeddings = HuggingFaceEmbeddings(
+            model_name="/Users/datagrand/Code/agent-demo/bge-m3",
+            encode_kwargs={"normalize_embeddings": True},
+            model_kwargs={"device": "mps"},
+        )
+
+        vectordb = Chroma.from_documents(
+            documents=split_docs,
+            embedding=embeddings,
+            collection_name="recipes",
+            persist_directory="./chroma_db_recipes",
+        )
+
+        return vectordb
+
     def pdf_agent_stream(self, user: str = "user"):
         # 创建知识库
-        pdf_url = "https://phi-public.s3.amazonaws.com/recipes/ThaiRecipes.pdf"
-        vectordb = self.create_knowledge_base(pdf_url, "recipes")
+        # pdf_url = "https://phi-public.s3.amazonaws.com/recipes/ThaiRecipes.pdf"
+        # vectordb = self.create_knowledge_base(pdf_url, "recipes")
+        vectordb = self.load_local_md_files()
 
         # 创建检索器
         retriever = vectordb.as_retriever(search_kwargs={"k": 3})
@@ -94,7 +125,7 @@ class Assistant:
         retrieval_chain = create_retrieval_chain(retriever, question_answer_chain)
 
         # 交互循环
-        print(
+        rich.print(
             f"\n[bold cyan] 🤖 AI:[/bold cyan] [bold green]你好，我是{self.project_name}的智能助手，你可以叫我{self.robot_name}。"
             "输入[bold yellow] exit[/bold yellow] 或 [bold yellow]bye[/bold yellow] 退出。\n"
         )
@@ -106,7 +137,6 @@ class Assistant:
 
             # 调用链进行流式输出 - 修改这里
             retrieval_chain.invoke({"input": message}, config={"callbacks": [streaming_handler]})
-            # 不需要再单独打印结果，因为流式处理器已经打印了
 
 
 if __name__ == "__main__":
