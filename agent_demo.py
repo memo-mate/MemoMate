@@ -11,6 +11,10 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_openai import ChatOpenAI
 from langchain_text_splitters import MarkdownTextSplitter
+from rich.console import Console
+from rich.live import Live
+from rich.panel import Panel
+from rich.progress import BarColumn, MofNCompleteColumn, Progress, TaskProgressColumn, TimeElapsedColumn
 from rich.prompt import Prompt
 
 from app.configs import settings
@@ -57,40 +61,67 @@ class Assistant:
 
         return vectordb
 
-    def load_local_md_files(self, collection_name: str = "recipes"):
-        """加载本地MD文件"""
-        # 创建向量存储
-        embeddings = HuggingFaceEmbeddings(
-            model_name="./bge-m3",
-            encode_kwargs={"normalize_embeddings": True},
-            model_kwargs={"device": "mps"},
-        )
+    def get_vector_store(self, collection_name: str = "recipes", is_exist: bool = False) -> Chroma:
+        """获取向量存储"""
+        # 终端输出
+        console = Console()
+        with console.status("[bold green]正在加载embedding模型...[/bold green]", spinner="bouncingBall"):
+            # 创建向量存储
+            embeddings = HuggingFaceEmbeddings(
+                model_name="./bge-m3",
+                encode_kwargs={"normalize_embeddings": True},
+                model_kwargs={"device": "mps"},
+            )
 
-        # 如果存在向量存储，则直接返回
-        if os.path.exists(f"./chroma_db_{collection_name}"):
-            return Chroma(
+        title = "正在加载向量存储..." if is_exist else "正在创建向量存储..."
+        with console.status(f"[bold green]{title}[/bold green]", spinner="bouncingBall"):
+            vectordb = Chroma(
                 collection_name=collection_name,
                 embedding_function=embeddings,
                 persist_directory=f"./chroma_db_{collection_name}",
             )
+        return vectordb
 
-        dir_path = "./data/Miner2PdfAndWord_Markitdown2Excel"
-        loader = DirectoryLoader(dir_path, glob="**/*.md")
-        documents = loader.load()
-        if not documents:
-            raise ValueError("文档目录为空")
-        # 使用 MarkdownTextSplitter 分割文档，chunk 大小为 3200，重叠 30
-        text_spliter = MarkdownTextSplitter(chunk_size=settings.chunk_size, chunk_overlap=settings.chunk_overlap)
+    def load_local_md_files(self, collection_name: str = "recipes"):
+        """加载本地MD文件"""
+        # 终端输出
+        console = Console()
+        is_exist = os.path.exists(f"./chroma_db_{collection_name}")
+        # 打印提示，初次加载，初始化向量存储
+        vectordb = self.get_vector_store(collection_name, is_exist=is_exist)
+        if not is_exist:
+            console.print("[bold green]初次加载，初始化知识库...[/bold green]")
+            with console.status("[bold green]正在加载本地MD文件...[/bold green]", spinner="bouncingBall"):
+                dir_path = "./data/Miner2PdfAndWord_Markitdown2Excel"
+                loader = DirectoryLoader(dir_path, glob="**/*.md")
+                documents = loader.load()
+                if not documents:
+                    raise ValueError("文档目录为空")
+            with console.status("[bold green]正在分割文档...[/bold green]", spinner="bouncingBall"):
+                # 使用 MarkdownTextSplitter 分割文档，chunk 大小为 3200，重叠 30
+                text_spliter = MarkdownTextSplitter(
+                    chunk_size=settings.chunk_size, chunk_overlap=settings.chunk_overlap
+                )
+                # 分割文档
+                split_docs = text_spliter.split_documents(documents)
 
-        # 分割文档
-        split_docs = text_spliter.split_documents(documents)
+            overall_progress = Progress(
+                "[progress.description]{task.description}",
+                BarColumn(),
+                MofNCompleteColumn(),
+                TaskProgressColumn(),
+                TimeElapsedColumn(),
+                # "[progress.percentage]{task.percentage:>3.0f}%",
+                # "[progress.completed]{task.completed}",
+                # "[progress.total]{task.total}",
+            )
+            overall_task = overall_progress.add_task("创建知识库", total=len(split_docs))
+            progress_panel = Panel.fit(overall_progress, title="嵌入文档", border_style="green")
 
-        vectordb = Chroma.from_documents(
-            documents=split_docs,
-            embedding=embeddings,
-            collection_name=collection_name,
-            persist_directory=f"./chroma_db_{collection_name}",
-        )
+            with Live(progress_panel, refresh_per_second=10):
+                for doc in split_docs:
+                    vectordb.add_documents([doc])
+                    overall_progress.advance(overall_task)
 
         return vectordb
 
@@ -99,7 +130,7 @@ class Assistant:
         # pdf_url = "https://phi-public.s3.amazonaws.com/recipes/ThaiRecipes.pdf"
         # vectordb = self.create_knowledge_base(pdf_url, "recipes")
         vectordb = self.load_local_md_files()
-
+        return
         # 创建回调处理器
         streaming_handler = RichStreamingCallbackHandler(robot_name=self.robot_name)
 

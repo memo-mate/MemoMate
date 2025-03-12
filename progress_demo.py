@@ -4,15 +4,10 @@ from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from copy import deepcopy
 
-from rich.console import Console
 from rich.live import Live
 from rich.panel import Panel
 from rich.progress import BarColumn, MofNCompleteColumn, Progress, TaskProgressColumn, TextColumn, TimeElapsedColumn
 from rich.table import Table
-
-# 获取终端宽度
-console = Console()
-width = console.width - 4  # 留出边框空间
 
 # 模拟数据
 mock_files = {
@@ -51,8 +46,8 @@ overall_task = overall_progress.add_task("总进度", total=total)
 
 # 创建进度表格
 progress_table = Table.grid(expand=True)  # 允许表格扩展
-progress_table.add_row(Panel.fit(overall_progress, title="总进度", border_style="green", width=width))
-progress_table.add_row(Panel.fit(job_progress, title="[b]子进度", border_style="red", width=width))
+progress_table.add_row(Panel.fit(overall_progress, title="总进度", border_style="green"))
+progress_table.add_row(Panel.fit(job_progress, title="[b]子进度", border_style="red"))
 
 
 def process_file(_: str):
