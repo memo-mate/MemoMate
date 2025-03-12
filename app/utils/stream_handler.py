@@ -160,12 +160,14 @@ class Assistant:
             callbacks=[streaming_handler],
         )
 
-        # 交互循环
         console.print(
             f"\n[bold cyan] 🤖 AI:[/bold cyan] [bold green]你好，我是{self.project_name}的智能助手，你可以叫我{self.robot_name}。"
             "输入[bold yellow] exit[/bold yellow] 或 [bold yellow]bye[/bold yellow] 退出。\n"
         )
-
+        # 打印模型信息
+        console.print(f"[bold cyan] 🤖 AI:[/bold cyan] [bold green]模型名称: {llm.model_name}[/bold green] \n")
+        console.print(f"[bold cyan] 🤖 AI:[/bold cyan] [bold green]最大上下文: {llm.max_tokens}[/bold green] \n")
+        # 交互循环
         while True:
             message = Prompt.ask(f"[bold] :sunglasses: {self.user}[/bold]")
             if message in ("exit", "bye"):

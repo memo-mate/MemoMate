@@ -3,12 +3,12 @@ import tempfile
 
 import requests
 import rich
-from langchain.chains.combine_documents import create_stuff_documents_chain
-from langchain.chains.retrieval import create_retrieval_chain
+from langchain.retrievers.multi_query import MultiQueryRetriever
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_chroma.vectorstores import Chroma
 from langchain_community.document_loaders import DirectoryLoader, PyPDFLoader
-from langchain_community.vectorstores import Chroma
-from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import BaseOutputParser
+from langchain_core.prompts import PromptTemplate
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_openai import ChatOpenAI
 from langchain_text_splitters import MarkdownTextSplitter
@@ -44,7 +44,7 @@ class Assistant:
 
         # 创建向量存储
         embeddings = HuggingFaceEmbeddings(
-            model_name="/Users/datagrand/Code/agent-demo/bge-m3",
+            model_name="./bge-m3",
             encode_kwargs={"normalize_embeddings": True},
             model_kwargs={"device": "mps"},
         )
@@ -57,7 +57,23 @@ class Assistant:
 
         return vectordb
 
-    def load_local_md_files(self):
+    def load_local_md_files(self, collection_name: str = "recipes"):
+        """加载本地MD文件"""
+        # 创建向量存储
+        embeddings = HuggingFaceEmbeddings(
+            model_name="./bge-m3",
+            encode_kwargs={"normalize_embeddings": True},
+            model_kwargs={"device": "mps"},
+        )
+
+        # 如果存在向量存储，则直接返回
+        if os.path.exists(f"./chroma_db_{collection_name}"):
+            return Chroma(
+                collection_name=collection_name,
+                embedding_function=embeddings,
+                persist_directory=f"./chroma_db_{collection_name}",
+            )
+
         dir_path = "./data/Miner2PdfAndWord_Markitdown2Excel"
         loader = DirectoryLoader(dir_path, glob="**/*.md")
         documents = loader.load()
@@ -69,18 +85,11 @@ class Assistant:
         # 分割文档
         split_docs = text_spliter.split_documents(documents)
 
-        # 创建向量存储
-        embeddings = HuggingFaceEmbeddings(
-            model_name="/Users/datagrand/Code/agent-demo/bge-m3",
-            encode_kwargs={"normalize_embeddings": True},
-            model_kwargs={"device": "mps"},
-        )
-
         vectordb = Chroma.from_documents(
             documents=split_docs,
             embedding=embeddings,
-            collection_name="recipes",
-            persist_directory="./chroma_db_recipes",
+            collection_name=collection_name,
+            persist_directory=f"./chroma_db_{collection_name}",
         )
 
         return vectordb
@@ -99,6 +108,7 @@ class Assistant:
 
         # 创建LLM
         llm = ChatOpenAI(
+            # model="deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",
             model="Qwen/QwQ-32B",
             api_key=settings.openai_api_key,
             base_url="https://api.siliconflow.cn/v1",
@@ -111,24 +121,47 @@ class Assistant:
         )
 
         # 创建提示模板
-        prompt = ChatPromptTemplate.from_template(
-            """回答以下问题，基于提供的上下文信息。如果无法从上下文中找到答案，请说"我不知道"。
+        #     prompt = ChatPromptTemplate.from_template(
+        #         """回答以下问题，基于提供的上下文信息。如果无法从上下文中找到答案，请说"我不知道"。
 
-    上下文: {context}
-    问题: {input}
+        # 上下文: {context}
+        # 问题: {input}
 
-    回答:"""
-        )
+        # 回答:"""
+        #     )
 
         # 创建文档链和检索链
-        question_answer_chain = create_stuff_documents_chain(llm, prompt)
-        retrieval_chain = create_retrieval_chain(retriever, question_answer_chain)
+        # question_answer_chain = create_stuff_documents_chain(llm, prompt)
+        # retrieval_chain = create_retrieval_chain(retriever, question_answer_chain)
+
+        # Output parser will split the LLM result into a list of queries
+        class LineListOutputParser(BaseOutputParser[list[str]]):
+            """Output parser for a list of lines."""
+
+            def parse(self, text: str) -> list[str]:
+                lines = text.strip().split("\n")
+                return list(filter(None, lines))  # Remove empty lines
+
+        output_parser = LineListOutputParser()
+
+        QUERY_PROMPT = PromptTemplate.from_template(
+            template="""你是一个ai语言模型助手。你的任务是生成五个不同的版本的用户问题，以从向量数据库中检索相关文档。通过生成用户问题的多个视角，您的目标是帮助用户克服基于距离的相似度搜索的一些局限性。
+以下为替代问题， 以换行符分隔，不要输出推理过程。
+原始问题：{question}""",
+        )
+
+        llm_chain = QUERY_PROMPT | llm | output_parser
+        # 创建多查询检索器
+        query_retriever = MultiQueryRetriever(retriever=retriever, llm_chain=llm_chain, parser_key="lines")
 
         # 交互循环
         rich.print(
             f"\n[bold cyan] 🤖 AI:[/bold cyan] [bold green]你好，我是{self.project_name}的智能助手，你可以叫我{self.robot_name}。"
             "输入[bold yellow] exit[/bold yellow] 或 [bold yellow]bye[/bold yellow] 退出。\n"
         )
+        # 打印模型信息
+        rich.print(f"[bold cyan] 🤖 AI:[/bold cyan] [bold green]模型名称: {llm.model_name}[/bold green] \n")
+        rich.print(f"[bold cyan] 🤖 AI:[/bold cyan] [bold green]最大上下文: {llm.max_tokens}[/bold green] \n")
 
         while True:
             message = Prompt.ask(f"[bold] :sunglasses: {self.user}[/bold]")
@@ -136,7 +169,13 @@ class Assistant:
                 break
 
             # 调用链进行流式输出 - 修改这里
-            retrieval_chain.invoke({"input": message}, config={"callbacks": [streaming_handler]})
+            # retrieval_chain.invoke({"input": message}, config={"callbacks": [streaming_handler]})
+            # 使用多查询检索器
+            print(f"prompt: {QUERY_PROMPT.format(question=message)}")
+            docs = query_retriever.invoke(message)
+            rich.inspect(docs)
+            rich.print("🎬 退出")
+            break
 
 
 if __name__ == "__main__":

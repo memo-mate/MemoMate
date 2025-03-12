@@ -19,3 +19,6 @@ __pycache__
 
 # 模型文件
 bge-*
+
+# 本地向量存储
+chroma_db_*
