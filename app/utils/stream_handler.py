@@ -4,9 +4,8 @@ from typing import Any
 from langchain_community.callbacks.openai_info import OpenAICallbackHandler
 from langchain_core.documents import Document
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
-from langchain_core.messages.ai import UsageMetadata
 from langchain_openai import ChatOpenAI
-from rich import box
+from rich import box, inspect
 from rich.console import Console, Group
 from rich.live import Live
 from rich.markdown import Markdown
@@ -118,9 +117,14 @@ class RichStreamingCallbackHandler(OpenAICallbackHandler):
         super().on_llm_end(*args, **kwargs)
         # 创建token信息标题
         token_info = f"输入: {self.prompt_tokens} tokens | 输出: {self.completion_tokens} tokens"
-
         # 更新面板显示token信息
         if self.llm_live:
+            if not self.text:
+                try:
+                    generation = args[0].generations[0][0]
+                    self.text = generation.message.content
+                except IndexError:
+                    self.text = "获取不到回复"
             self.llm_live.update(
                 Panel(
                     Markdown(self.text),
@@ -157,7 +161,8 @@ class Assistant:
             timeout=None,
             max_retries=3,
             streaming=True,  # 流式输出
-            callbacks=[streaming_handler],
+            stream_usage=True,
+            # callbacks=[streaming_handler],
         )
 
         console.print(
@@ -179,10 +184,8 @@ class Assistant:
                 HumanMessage(content=message),
             ]
             response: AIMessage = llm.invoke(template, config={"callbacks": [streaming_handler]})
-            useage: UsageMetadata = response.usage_metadata
-            streaming_handler.completion_tokens = useage["output_tokens"]
-            streaming_handler.prompt_tokens = useage["input_tokens"]
-            streaming_handler.total_tokens = useage["total_tokens"]
+            inspect(response)
+            break
 
 
 if __name__ == "__main__":

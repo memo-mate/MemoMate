@@ -3,18 +3,18 @@ import tempfile
 
 import requests
 import rich
-from langchain.retrievers.multi_query import MultiQueryRetriever
+from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_chroma.vectorstores import Chroma
 from langchain_community.document_loaders import DirectoryLoader, PyPDFLoader
-from langchain_core.output_parsers import BaseOutputParser
-from langchain_core.prompts import PromptTemplate
+from langchain_core.prompts import ChatPromptTemplate
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_openai import ChatOpenAI
 from langchain_text_splitters import MarkdownTextSplitter
 from rich.prompt import Prompt
 
 from app.configs import settings
+from app.models.custom_retriever import MULTI_QUERY_PROMPT, get_custom_retriever
 from app.utils.stream_handler import RichStreamingCallbackHandler
 
 
@@ -100,16 +100,13 @@ class Assistant:
         # vectordb = self.create_knowledge_base(pdf_url, "recipes")
         vectordb = self.load_local_md_files()
 
-        # 创建检索器
-        retriever = vectordb.as_retriever(search_kwargs={"k": 3})
-
         # 创建回调处理器
         streaming_handler = RichStreamingCallbackHandler(robot_name=self.robot_name)
 
         # 创建LLM
         llm = ChatOpenAI(
-            # model="deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",
-            model="Qwen/QwQ-32B",
+            model="deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",
+            # model="Qwen/QwQ-32B",
             api_key=settings.openai_api_key,
             base_url="https://api.siliconflow.cn/v1",
             temperature=0,
@@ -117,42 +114,26 @@ class Assistant:
             timeout=None,
             max_retries=3,
             streaming=True,  # 流式输出
-            callbacks=[streaming_handler],
+            stream_usage=True,
+            # callbacks=[streaming_handler],
         )
 
         # 创建提示模板
-        #     prompt = ChatPromptTemplate.from_template(
-        #         """回答以下问题，基于提供的上下文信息。如果无法从上下文中找到答案，请说"我不知道"。
+        prompt = ChatPromptTemplate.from_template(
+            """回答以下问题，基于提供的上下文信息。如果无法从上下文中找到答案，请说"我不知道"。
 
-        # 上下文: {context}
-        # 问题: {input}
+上下文: {context}
+问题: {question}
 
-        # 回答:"""
-        #     )
-
-        # 创建文档链和检索链
-        # question_answer_chain = create_stuff_documents_chain(llm, prompt)
-        # retrieval_chain = create_retrieval_chain(retriever, question_answer_chain)
-
-        # Output parser will split the LLM result into a list of queries
-        class LineListOutputParser(BaseOutputParser[list[str]]):
-            """Output parser for a list of lines."""
-
-            def parse(self, text: str) -> list[str]:
-                lines = text.strip().split("\n")
-                return list(filter(None, lines))  # Remove empty lines
-
-        output_parser = LineListOutputParser()
-
-        QUERY_PROMPT = PromptTemplate.from_template(
-            template="""你是一个ai语言模型助手。你的任务是生成五个不同的版本的用户问题，以从向量数据库中检索相关文档。通过生成用户问题的多个视角，您的目标是帮助用户克服基于距离的相似度搜索的一些局限性。
-以下为替代问题， 以换行符分隔，不要输出推理过程。
-原始问题：{question}""",
+回答:"""
         )
 
-        llm_chain = QUERY_PROMPT | llm | output_parser
-        # 创建多查询检索器
-        query_retriever = MultiQueryRetriever(retriever=retriever, llm_chain=llm_chain, parser_key="lines")
+        # 创建文档链和检索链
+        question_answer_chain = create_stuff_documents_chain(llm, prompt)
+        query_retriever = get_custom_retriever(llm, vectordb)
+
+        result_chain = query_retriever | question_answer_chain
+        # retrieval_chain = create_retrieval_chain(retriever, question_answer_chain)
 
         # 交互循环
         rich.print(
@@ -168,12 +149,12 @@ class Assistant:
             if message in ("exit", "bye"):
                 break
 
-            # 调用链进行流式输出 - 修改这里
-            # retrieval_chain.invoke({"input": message}, config={"callbacks": [streaming_handler]})
             # 使用多查询检索器
-            print(f"prompt: {QUERY_PROMPT.format(question=message)}")
-            docs = query_retriever.invoke(message)
-            rich.inspect(docs)
+            print(f"prompt: {MULTI_QUERY_PROMPT.format(question=message)}")
+            # 调用链进行流式输出 - 修改这里
+            result_chain.invoke({"question": message}, config={"callbacks": [streaming_handler]})
+            # result_chain.invoke({"question": message})
+
             rich.print("🎬 退出")
             break
 
