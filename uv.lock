@@ -7,112 +7,6 @@ resolution-markers = [
 ]
 
 [[package]]
-name = "agent-demo"
-version = "0.1.0"
-source = { virtual = "." }
-dependencies = [
-    { name = "alembic" },
-    { name = "bcrypt" },
-    { name = "email-validator" },
-    { name = "emails" },
-    { name = "fastapi", extra = ["standard"] },
-    { name = "httpx", extra = ["socks"] },
-    { name = "huggingface-hub" },
-    { name = "jinja2" },
-    { name = "lancedb" },
-    { name = "langchain" },
-    { name = "langchain-chroma" },
-    { name = "langchain-community" },
-    { name = "langchain-huggingface" },
-    { name = "langchain-ollama" },
-    { name = "langchain-openai" },
-    { name = "langgraph" },
-    { name = "orjson" },
-    { name = "pandas" },
-    { name = "passlib", extra = ["bcrypt"] },
-    { name = "pillow" },
-    { name = "psycopg", extra = ["binary"] },
-    { name = "pydantic" },
-    { name = "pydantic-settings" },
-    { name = "pyjwt" },
-    { name = "pymupdf" },
-    { name = "python-multipart" },
-    { name = "redis", extra = ["hiredis"] },
-    { name = "rich" },
-    { name = "sqlmodel" },
-    { name = "structlog" },
-    { name = "tavily-python" },
-    { name = "tenacity" },
-    { name = "unstructured", extra = ["md"] },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "coverage" },
-    { name = "huggingface-hub", extra = ["cli"] },
-    { name = "ipython" },
-    { name = "markitdown" },
-    { name = "mypy" },
-    { name = "pandas-stubs" },
-    { name = "pre-commit" },
-    { name = "pytest" },
-    { name = "ruff" },
-    { name = "types-passlib" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "alembic", specifier = ">=1.12.1,<2.0.0" },
-    { name = "bcrypt", specifier = "==4.3.0" },
-    { name = "email-validator", specifier = ">=2.1.0.post1,<3.0.0.0" },
-    { name = "emails", specifier = ">=0.6,<1.0" },
-    { name = "fastapi", extras = ["standard"], specifier = ">=0.114.2,<1.0.0" },
-    { name = "httpx", specifier = ">=0.25.1,<1.0.0" },
-    { name = "httpx", extras = ["socks"], specifier = ">=0.28.1" },
-    { name = "huggingface-hub", specifier = ">=0.29.1" },
-    { name = "jinja2", specifier = ">=3.1.4,<4.0.0" },
-    { name = "lancedb", specifier = ">=0.20.0" },
-    { name = "langchain", specifier = ">=0.3.19" },
-    { name = "langchain-chroma", specifier = ">=0.2.2" },
-    { name = "langchain-community", specifier = ">=0.3.18" },
-    { name = "langchain-huggingface", specifier = ">=0.1.2" },
-    { name = "langchain-ollama", specifier = ">=0.2.3" },
-    { name = "langchain-openai", specifier = ">=0.3.7" },
-    { name = "langgraph", specifier = ">=0.3.2" },
-    { name = "orjson", specifier = ">=3.10.14" },
-    { name = "pandas", specifier = ">=2.2.3" },
-    { name = "passlib", extras = ["bcrypt"], specifier = ">=1.7.4,<2.0.0" },
-    { name = "pillow", specifier = ">=11.1.0" },
-    { name = "psycopg", extras = ["binary"], specifier = ">=3.1.13,<4.0.0" },
-    { name = "pydantic", specifier = ">2.0" },
-    { name = "pydantic-settings", specifier = ">=2.2.1,<3.0.0" },
-    { name = "pyjwt", specifier = ">=2.8.0,<3.0.0" },
-    { name = "pymupdf", specifier = ">=1.25.3" },
-    { name = "python-multipart", specifier = ">=0.0.7,<1.0.0" },
-    { name = "redis", extras = ["hiredis"], specifier = ">=5.2.1" },
-    { name = "rich", specifier = ">=13.9.4" },
-    { name = "sqlmodel", specifier = ">=0.0.21,<1.0.0" },
-    { name = "structlog", specifier = ">=25.1.0" },
-    { name = "tavily-python", specifier = ">=0.5.1" },
-    { name = "tenacity", specifier = ">=8.2.3,<10.0.0" },
-    { name = "unstructured", extras = ["md"], specifier = ">=0.16.23" },
-]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "coverage", specifier = ">=7.6.12" },
-    { name = "huggingface-hub", extras = ["cli"], specifier = ">=0.29.1" },
-    { name = "ipython", specifier = ">=8.32.0" },
-    { name = "markitdown", specifier = ">=0.0.1" },
-    { name = "mypy", specifier = ">=1.15.0" },
-    { name = "pandas-stubs", specifier = ">=2.2.3.241126" },
-    { name = "pre-commit", specifier = ">=4.1.0" },
-    { name = "pytest", specifier = ">=8.3.4" },
-    { name = "ruff", specifier = ">=0.9.7" },
-    { name = "types-passlib", specifier = ">=1.7.7.20241221" },
-]
-
-[[package]]
 name = "aiofiles"
 version = "24.1.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1886,6 +1780,112 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/d6/54/cfe61301667036ec958cb99bd3efefba235e65cdeb9c84d24a8293ba1d90/mdurl-0.1.2.tar.gz", hash = "sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba", size = 8729 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b3/38/89ba8ad64ae25be8de66a6d463314cf1eb366222074cfda9ee839c56a4b4/mdurl-0.1.2-py3-none-any.whl", hash = "sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8", size = 9979 },
+]
+
+[[package]]
+name = "memomate"
+version = "0.1.0"
+source = { virtual = "." }
+dependencies = [
+    { name = "alembic" },
+    { name = "bcrypt" },
+    { name = "email-validator" },
+    { name = "emails" },
+    { name = "fastapi", extra = ["standard"] },
+    { name = "httpx", extra = ["socks"] },
+    { name = "huggingface-hub" },
+    { name = "jinja2" },
+    { name = "lancedb" },
+    { name = "langchain" },
+    { name = "langchain-chroma" },
+    { name = "langchain-community" },
+    { name = "langchain-huggingface" },
+    { name = "langchain-ollama" },
+    { name = "langchain-openai" },
+    { name = "langgraph" },
+    { name = "orjson" },
+    { name = "pandas" },
+    { name = "passlib", extra = ["bcrypt"] },
+    { name = "pillow" },
+    { name = "psycopg", extra = ["binary"] },
+    { name = "pydantic" },
+    { name = "pydantic-settings" },
+    { name = "pyjwt" },
+    { name = "pymupdf" },
+    { name = "python-multipart" },
+    { name = "redis", extra = ["hiredis"] },
+    { name = "rich" },
+    { name = "sqlmodel" },
+    { name = "structlog" },
+    { name = "tavily-python" },
+    { name = "tenacity" },
+    { name = "unstructured", extra = ["md"] },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "coverage" },
+    { name = "huggingface-hub", extra = ["cli"] },
+    { name = "ipython" },
+    { name = "markitdown" },
+    { name = "mypy" },
+    { name = "pandas-stubs" },
+    { name = "pre-commit" },
+    { name = "pytest" },
+    { name = "ruff" },
+    { name = "types-passlib" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "alembic", specifier = ">=1.12.1,<2.0.0" },
+    { name = "bcrypt", specifier = "==4.3.0" },
+    { name = "email-validator", specifier = ">=2.1.0.post1,<3.0.0.0" },
+    { name = "emails", specifier = ">=0.6,<1.0" },
+    { name = "fastapi", extras = ["standard"], specifier = ">=0.114.2,<1.0.0" },
+    { name = "httpx", specifier = ">=0.25.1,<1.0.0" },
+    { name = "httpx", extras = ["socks"], specifier = ">=0.28.1" },
+    { name = "huggingface-hub", specifier = ">=0.29.1" },
+    { name = "jinja2", specifier = ">=3.1.4,<4.0.0" },
+    { name = "lancedb", specifier = ">=0.20.0" },
+    { name = "langchain", specifier = ">=0.3.19" },
+    { name = "langchain-chroma", specifier = ">=0.2.2" },
+    { name = "langchain-community", specifier = ">=0.3.18" },
+    { name = "langchain-huggingface", specifier = ">=0.1.2" },
+    { name = "langchain-ollama", specifier = ">=0.2.3" },
+    { name = "langchain-openai", specifier = ">=0.3.7" },
+    { name = "langgraph", specifier = ">=0.3.2" },
+    { name = "orjson", specifier = ">=3.10.14" },
+    { name = "pandas", specifier = ">=2.2.3" },
+    { name = "passlib", extras = ["bcrypt"], specifier = ">=1.7.4,<2.0.0" },
+    { name = "pillow", specifier = ">=11.1.0" },
+    { name = "psycopg", extras = ["binary"], specifier = ">=3.1.13,<4.0.0" },
+    { name = "pydantic", specifier = ">2.0" },
+    { name = "pydantic-settings", specifier = ">=2.2.1,<3.0.0" },
+    { name = "pyjwt", specifier = ">=2.8.0,<3.0.0" },
+    { name = "pymupdf", specifier = ">=1.25.3" },
+    { name = "python-multipart", specifier = ">=0.0.7,<1.0.0" },
+    { name = "redis", extras = ["hiredis"], specifier = ">=5.2.1" },
+    { name = "rich", specifier = ">=13.9.4" },
+    { name = "sqlmodel", specifier = ">=0.0.21,<1.0.0" },
+    { name = "structlog", specifier = ">=25.1.0" },
+    { name = "tavily-python", specifier = ">=0.5.1" },
+    { name = "tenacity", specifier = ">=8.2.3,<10.0.0" },
+    { name = "unstructured", extras = ["md"], specifier = ">=0.16.23" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "coverage", specifier = ">=7.6.12" },
+    { name = "huggingface-hub", extras = ["cli"], specifier = ">=0.29.1" },
+    { name = "ipython", specifier = ">=8.32.0" },
+    { name = "markitdown", specifier = ">=0.0.1" },
+    { name = "mypy", specifier = ">=1.15.0" },
+    { name = "pandas-stubs", specifier = ">=2.2.3.241126" },
+    { name = "pre-commit", specifier = ">=4.1.0" },
+    { name = "pytest", specifier = ">=8.3.4" },
+    { name = "ruff", specifier = ">=0.9.7" },
+    { name = "types-passlib", specifier = ">=1.7.7.20241221" },
 ]
 
 [[package]]
