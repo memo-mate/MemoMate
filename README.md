@@ -14,3 +14,7 @@ uv sync
 ```bash
 huggingface-cli download BAAI/bge-large-zh-v1.5 --local-dir ./bge-large-zh-v1.5
 ```
+
+### 核心模块文档
+
+[核心模块文档](https://memo-docs.daojichang.eu.org/develop/core-modules.html)
