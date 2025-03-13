@@ -1,5 +1,5 @@
 from app.core import logger
-from app.rag.llm.memo_tokenizers import TokenCounter, TokenizerType
+from app.rag.llm.tokenizers import TokenCounter, TokenizerType
 
 
 def test_tokenizer():

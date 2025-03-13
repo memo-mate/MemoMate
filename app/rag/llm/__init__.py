@@ -1,3 +1,4 @@
-from .memo_tokenizers import TokenCounter, TokenizerType
+# 在__init__.py中不导入任何模块
+# 仅定义__all__，让用户显式导入
 
-__all__ = ["TokenCounter", "TokenizerType"]
+__all__ = []  # 将类型显式导入，而不是在这里导入
