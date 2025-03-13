@@ -26,4 +26,4 @@ huggingface-cli download BAAI/bge-large-zh-v1.5 --local-dir ./bge-large-zh-v1.5
 uv run python -m app.rag.llm.tokenizers
 ```
 
-![image-20250313154733459](/Users/datagrand/Library/Application Support/typora-user-images/image-20250313154733459.png)
+![image-20250313154733459](https://cdn.jsdelivr.net/gh/daojiAnime/cdn@master/img/image-20250313154733459.png)
