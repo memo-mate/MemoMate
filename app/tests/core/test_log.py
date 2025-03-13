@@ -1,7 +1,7 @@
 from app.core import logger
 
 
-def test_log_adapter():
+def test_log_adapter() -> None:
     # 测试日志适配器
 
     # 普通日志

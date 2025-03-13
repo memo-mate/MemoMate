@@ -16,7 +16,7 @@ class TokenCounter:
         self.model_name = model_name
         self.tokenizer = self._init_tokenizer()
 
-    def _init_tokenizer(self):
+    def _init_tokenizer(self) -> tiktoken.Encoding | AutoTokenizer:
         match self.tokenizer_type:
             case TokenizerType.TIKTOKEN:
                 return tiktoken.encoding_for_model(self.model_name)

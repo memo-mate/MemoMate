@@ -1,10 +1,12 @@
+from typing import Any
+
 from langchain_core.messages import AIMessage
 from langchain_core.runnables import Runnable, RunnableConfig
 
 from app.rag.llm.completions import LLM, LLMParams, ModelAPIType, RAGLLMPrompt
 
 
-def test_llm_chat():
+def test_llm_chat() -> None:
     prompt = RAGLLMPrompt(context="", question="你好")
     params = LLMParams(
         api_type=ModelAPIType.OPENAI,
@@ -13,7 +15,7 @@ def test_llm_chat():
         stream_usage=False,
     )
 
-    llm: Runnable = LLM().generate(
+    llm: Runnable[dict[str, Any], AIMessage] = LLM().generate(
         prompt,
         params,
     )

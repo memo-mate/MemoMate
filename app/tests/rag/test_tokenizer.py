@@ -2,7 +2,7 @@ from app.core import logger
 from app.rag.llm.tokenizers import TokenCounter, TokenizerType
 
 
-def test_tokenizer():
+def test_tokenizer() -> None:
     text = "你好，世界！Hello World!"
     # OpenAI 模型
     counter = TokenCounter(TokenizerType.TIKTOKEN, "gpt-3.5-turbo")

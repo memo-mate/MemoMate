@@ -1,5 +1,7 @@
 from enum import StrEnum
+from typing import Any
 
+from langchain_core.messages import AIMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import Runnable
 from langchain_ollama import ChatOllama
@@ -47,7 +49,7 @@ class LLM:
     def __init__(self) -> None:
         pass
 
-    def generate(self, prompt: RAGLLMPrompt, params: LLMParams) -> Runnable:
+    def generate(self, prompt: RAGLLMPrompt, params: LLMParams) -> Runnable[dict[str, Any], AIMessage]:
         prompt_vars = prompt.prompt.input_variables
         if "context" not in prompt_vars or "question" not in prompt_vars:
             raise ValueError("Prompt must have context and question variables.")
@@ -64,7 +66,7 @@ class LLM:
                     max_retries=params.max_retries,
                     streaming=params.streaming,
                     stream_usage=params.stream_usage,
-                )
+                )  # type: ignore
             case ModelAPIType.OLLAMA:
                 llm = ChatOllama(
                     model=params.model_name,
@@ -75,7 +77,7 @@ class LLM:
                     max_retries=params.max_retries,
                     streaming=params.streaming,
                     stream_usage=params.stream_usage,
-                )
+                )  # type: ignore
 
             case _:
                 raise ValueError("Unsupported api type.")
