@@ -25,7 +25,6 @@ RESULT_PROMPT = ChatPromptTemplate.from_template(
 
 
 class LLMParams(BaseModel):
-    prompt: str
     temperature: float = 0
     max_tokens: int | None = None
     timeout: int | None = None
