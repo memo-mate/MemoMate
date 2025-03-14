@@ -1,9 +1,10 @@
 from enum import StrEnum
 from typing import Any
 
-from langchain_core.messages import AIMessage
+from langchain_core.language_models.chat_models import BaseChatModel
+from langchain_core.messages import BaseMessage
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.runnables import Runnable
+from langchain_core.runnables import RunnableSerializable
 from langchain_ollama import ChatOllama
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel
@@ -49,16 +50,18 @@ class LLM:
     def __init__(self) -> None:
         pass
 
-    def generate(self, prompt: RAGLLMPrompt, params: LLMParams) -> Runnable[dict[str, Any], AIMessage]:
+    # mypy: disable-error-code="call-arg"
+    def generate(self, prompt: RAGLLMPrompt, params: LLMParams) -> RunnableSerializable[dict[Any, Any], BaseMessage]:
         prompt_vars = prompt.prompt.input_variables
         if "context" not in prompt_vars or "question" not in prompt_vars:
             raise ValueError("Prompt must have context and question variables.")
 
+        llm: BaseChatModel | None = None
         match params.api_type:
             case ModelAPIType.OPENAI:
                 llm = ChatOpenAI(
                     model=params.model_name,
-                    api_key=params.api_key,
+                    api_key=params.api_key,  # type: ignore[arg-type]
                     base_url=params.base_url,
                     temperature=params.temperature,
                     max_tokens=params.max_tokens,
@@ -66,7 +69,7 @@ class LLM:
                     max_retries=params.max_retries,
                     streaming=params.streaming,
                     stream_usage=params.stream_usage,
-                )  # type: ignore
+                )
             case ModelAPIType.OLLAMA:
                 llm = ChatOllama(
                     model=params.model_name,
@@ -77,7 +80,7 @@ class LLM:
                     max_retries=params.max_retries,
                     streaming=params.streaming,
                     stream_usage=params.stream_usage,
-                )  # type: ignore
+                )
 
             case _:
                 raise ValueError("Unsupported api type.")

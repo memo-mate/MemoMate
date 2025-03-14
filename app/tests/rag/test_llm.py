@@ -1,7 +1,5 @@
-from typing import Any
-
-from langchain_core.messages import AIMessage
-from langchain_core.runnables import Runnable, RunnableConfig
+from langchain_core.messages import BaseMessage
+from langchain_core.runnables import RunnableConfig
 
 from app.rag.llm.completions import LLM, LLMParams, ModelAPIType, RAGLLMPrompt
 
@@ -15,13 +13,10 @@ def test_llm_chat() -> None:
         stream_usage=False,
     )
 
-    llm: Runnable[dict[str, Any], AIMessage] = LLM().generate(
-        prompt,
-        params,
-    )
-    response: AIMessage = llm.invoke(
+    llm = LLM().generate(prompt, params)
+    response: BaseMessage = llm.invoke(
         prompt.model_dump(exclude={"prompt"}),
         config=RunnableConfig(callbacks=[]),
     )
-    print(response.content)
-    print(response.usage_metadata)
+    print(f"content: {response.content}")
+    print(f"usage_metadata: {getattr(response, 'usage_metadata', None)}")
