@@ -141,5 +141,18 @@ class Settings(BaseSettings):
     # Tavily API Key
     TAVILY_API_KEY: str = ""
 
+    # 嵌入模块配置
+    EMBEDDING_MODEL_PATH: str = "BAAI/bge-large-zh-v1.5"
+    VECTOR_STORE_PATH: str = "app/rag/embedding/database"
+    DEFAULT_COLLECTION_NAME: str = "documents"
+    EMBEDDING_DIMENSION: int = 1024
+    EMBEDDING_MULTI_PROCESS: bool = False
+
+    # 检索配置
+    RETRIEVER_TOP_K: int = 5
+    MULTI_QUERY_COUNT: int = 3
+    VECTOR_WEIGHT: float = 0.7
+    KEYWORD_WEIGHT: float = 0.3
+
 
 settings: Settings = Settings()  # type: ignore

@@ -26,6 +26,7 @@ data/postgres-data
 data/redis-data
 data/pgadmin-data
 bge-*
+database/
 
 # 操作系统和本地环境文件
 .DS_Store
