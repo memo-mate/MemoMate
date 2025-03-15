@@ -1,0 +1,11 @@
+---
+description: 代码风格规范
+globs: 
+alwaysApply: false
+---
+
+# 代码风格规范
+
+## 如果需要格式化代码，使用 Ruff 工具进行代码格式化。
+## 遵循最新的PEP8规范，根据 Ruff 的官方代码风格编写代码。
+## 类型注解 使用 X | Y， 而不是 Optional[X] 或者 Union[X]
