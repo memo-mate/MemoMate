@@ -41,6 +41,8 @@ dependencies = [
     "redis[hiredis]>=5.2.1",
     "pillow>=11.1.0",
     "qdrant-client>=1.12.1",
+    "sse-starlette>=2.2.1",
+    "websockets>=15.0.1",
 ]
 
 [dependency-groups]
@@ -55,6 +57,7 @@ dev = [
     "ruff>=0.9.7",
     "types-passlib>=1.7.7.20241221",
     "coverage>=7.6.12",
+    "pytest-asyncio>=0.25.3",
 ]
 
 [tool.mypy]
