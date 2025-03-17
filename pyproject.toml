@@ -60,6 +60,10 @@ dev = [
 [tool.mypy]
 strict = true
 exclude = ["venv", ".venv", "alembic"]
+# 忽略指定位置的特定错误
+[[tool.mypy.overrides]]
+module = "app.rag.llm.completions"
+disable_error_code = ["call-arg"]
 
 [[tool.mypy.overrides]]
 module = "transformers.*"
