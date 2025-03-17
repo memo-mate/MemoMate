@@ -18,7 +18,7 @@ def test_multi_query():
     try:
         client = QdrantClient(path="app/database", prefer_grpc=True)
 
-        question = "马梓康会什么技能?"
+        question = "马梓康会开滴滴吗?"
         llm = ChatOpenAI(
             model="deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",
             api_key=os.environ["OPENAI_API_KEY"],
