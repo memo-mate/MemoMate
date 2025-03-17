@@ -1,4 +1,9 @@
 ---
+description: 
+globs: 
+alwaysApply: false
+---
+---
 description: python的包管理工具使用的是 uv
 globs:
 alwaysApply: false
