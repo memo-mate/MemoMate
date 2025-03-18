@@ -18,6 +18,7 @@ app.egg-info
 # 测试和代码检查
 .pytest_cache
 .ruff_cache
+.cursorrules
 
 # 本地数据
 data/

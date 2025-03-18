@@ -148,6 +148,10 @@ class Settings(BaseSettings):
     EMBEDDING_DIMENSION: int = 1024
     EMBEDDING_MULTI_PROCESS: bool = False
 
+    # 重排序模块配置
+    RERANKER_MODEL_PATH: str = "BAAI/bge-reranker-v2-m3"
+    RERANKER_TOP_K: int = 5
+
     # 检索配置
     RETRIEVER_TOP_K: int = 5
     MULTI_QUERY_COUNT: int = 3
