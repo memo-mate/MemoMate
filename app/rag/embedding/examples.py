@@ -1,7 +1,7 @@
-import os
-import uuid
-import time
 import json
+import os
+import time
+import uuid
 
 # 禁用LangSmith追踪
 os.environ["LANGCHAIN_TRACING_V2"] = "false"
@@ -171,9 +171,10 @@ def example_retriever() -> None:
     ]
 
     # 直接使用Qdrant客户端API创建集合和添加数据
-    from qdrant_client.http import models as rest
-    import uuid
     import json
+    import uuid
+
+    from qdrant_client.http import models as rest
 
     collection_name = settings.DEFAULT_COLLECTION_NAME
     vector_size = len(embedding_model.embed_query("测试查询"))
@@ -209,7 +210,7 @@ def example_retriever() -> None:
 
     # 准备点
     points = []
-    for i, (text, metadata, embedding) in enumerate(zip(texts, metadatas, embeddings)):
+    for i, (text, metadata, embedding) in enumerate(zip(texts, metadatas, embeddings, strict=False)):
         point = rest.PointStruct(
             id=str(uuid.uuid4()),  # 使用UUID作为ID
             vector=embedding,
@@ -370,24 +371,20 @@ def example_evaluation() -> None:
     # 生成唯一集合名称
     collection_name = f"example_{uuid.uuid4().hex[:8]}"
     client = QdrantClient(location=":memory:", prefer_grpc=True)
-    
+
     # 创建集合并添加数据
     client.create_collection(
         collection_name=collection_name,
         vectors_config={"size": 1024, "distance": "Cosine"},
     )
-    
+
     # 将向量添加到内存中的集合
     embeddings = embedding_model.embed_documents(texts)
     points = []
-    for i, (text, metadata, embedding) in enumerate(zip(texts, metadatas, embeddings)):
-        point = models.PointStruct(
-            id=i,
-            vector=embedding,
-            payload={"text": text, "metadata": json.dumps(metadata)}
-        )
+    for i, (text, metadata, embedding) in enumerate(zip(texts, metadatas, embeddings, strict=False)):
+        point = models.PointStruct(id=i, vector=embedding, payload={"text": text, "metadata": json.dumps(metadata)})
         points.append(point)
-    
+
     client.upload_points(
         collection_name=collection_name,
         points=points,
@@ -455,10 +452,10 @@ def run_examples() -> None:
     example_vector_store()
     example_retriever()
     example_index_manager()
-    
+
     # 添加延迟，确保资源被释放
     time.sleep(1)
-    
+
     example_evaluation()
 
 

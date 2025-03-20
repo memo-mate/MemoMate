@@ -1,7 +1,7 @@
 """重排序器测试模块"""
 
 import unittest
-from typing import Any, Dict, List, Optional, Sequence, Union
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 from langchain_core.callbacks.manager import CallbackManagerForRetrieverRun
@@ -12,7 +12,6 @@ from langchain_core.runnables import RunnableConfig
 from app.core.log_adapter import logger
 from app.rag.reranker.base import BaseReranker
 from app.rag.reranker.cross_encoder import CrossEncoderReranker
-from app.rag.reranker.llm_reranker import LLMReranker
 from app.rag.reranker.reranking_retriever import RerankingRetriever
 
 
@@ -156,14 +155,14 @@ class TestRerankingRetriever(unittest.TestCase):
         # 创建一个真实的基础检索器类
         class TestRetriever(BaseRetriever):
             def _get_relevant_documents(
-                self, query: str, *, run_manager: Optional[CallbackManagerForRetrieverRun] = None
-            ) -> List[Document]:
+                self, query: str, *, run_manager: CallbackManagerForRetrieverRun | None = None
+            ) -> list[Document]:
                 logger.info("TestRetriever._get_relevant_documents 被调用", query=query)
                 return docs
 
             def invoke(
-                self, input: Union[str, Dict[str, Any]], config: Optional[RunnableConfig] = None, **kwargs: Any
-            ) -> List[Document]:
+                self, input: str | dict[str, Any], config: RunnableConfig | None = None, **kwargs: Any
+            ) -> list[Document]:
                 logger.info("TestRetriever.invoke 被调用", input=input)
                 return docs
 

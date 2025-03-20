@@ -86,7 +86,7 @@ def test_vector_store() -> bool:
         print(f"结果数量: {len(results)}")
 
         for i, doc in enumerate(results):
-            print(f"结果 {i+1}: {doc.page_content}")
+            print(f"结果 {i + 1}: {doc.page_content}")
 
         # 删除集合
         vector_store.delete_collection()
@@ -193,7 +193,7 @@ def test_retriever() -> bool:
         print(f"检索耗时: {end_time - start_time:.4f} 秒")
 
         for i, doc in enumerate(docs):
-            print(f"结果 {i+1}: {doc.page_content}")
+            print(f"结果 {i + 1}: {doc.page_content}")
 
         # 删除集合
         client.delete_collection(collection_name=collection_name)
@@ -223,13 +223,13 @@ def test_document_processor() -> bool:
     人工智能（Artificial Intelligence，简称AI）是计算机科学的一个分支，
     致力于开发能够模拟人类智能的系统。AI技术包括机器学习、深度学习、
     自然语言处理、计算机视觉等多个领域。
-    
+
     机器学习是AI的核心技术之一，它使计算机系统能够从数据中学习，
     而无需显式编程。深度学习是机器学习的一种方法，使用多层神经网络进行学习。
-    
+
     自然语言处理（NLP）使计算机能够理解、解释和生成人类语言。
     计算机视觉则使计算机能够从图像或视频中获取信息并理解视觉世界。
-    
+
     人工智能在医疗、金融、教育、交通等多个领域有广泛应用，
     并且随着技术的发展，其应用范围还在不断扩大。
     """
@@ -248,7 +248,7 @@ def test_document_processor() -> bool:
     print(f"处理耗时: {end_time - start_time:.4f} 秒")
 
     for i, chunk in enumerate(chunks):
-        print(f"块 {i+1}: {chunk.page_content[:50]}...")
+        print(f"块 {i + 1}: {chunk.page_content[:50]}...")
 
     return True
 

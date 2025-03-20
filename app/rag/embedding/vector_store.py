@@ -170,14 +170,14 @@ class QdrantStore(BaseModel):
             }
         except Exception as e:
             return {"error": str(e)}
-    
+
     def create_collection(self, collection_name: str, vector_size: int, distance: str = "Cosine") -> None:
         """创建集合"""
         self.client.create_collection(
             collection_name=collection_name,
             vectors_config={"size": vector_size, "distance": distance},
         )
-    
+
     def similarity_search(
         self,
         query: str,

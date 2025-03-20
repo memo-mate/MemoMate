@@ -4,12 +4,11 @@ from typing import Any
 
 from langchain_core.callbacks.manager import CallbackManagerForRetrieverRun
 from langchain_core.documents import Document
-from langchain_core.language_models import BaseLLM
-from langchain_openai import ChatOpenAI
 from langchain_core.prompts import PromptTemplate
 from langchain_core.retrievers import BaseRetriever
 from pydantic import BaseModel
 from qdrant_client import QdrantClient
+
 from app.core.config import settings
 from app.rag.embedding.vector_search import HuggingFaceEmbeddings
 
@@ -68,17 +67,18 @@ class QdrantRetriever(BaseRetriever, BaseModel):
             # 检查集合是否存在
             collections = self.client.get_collections().collections
             collection_names = [collection.name for collection in collections]
-            
+
             print(f"可用集合: {collection_names}")
             print(f"当前集合名称: {self.collection_name}")
             print(f"客户端ID: {id(self.client)}")
 
             if self.collection_name not in collection_names:
                 print(f"警告: '{self.collection_name}' 集合不存在，需要先创建集合并写入数据。")
-                
+
                 # 尝试创建集合
                 try:
                     from qdrant_client.http import models as rest
+
                     print(f"尝试创建集合: {self.collection_name}")
                     self.client.create_collection(
                         collection_name=self.collection_name,
@@ -92,7 +92,7 @@ class QdrantRetriever(BaseRetriever, BaseModel):
                     collections = self.client.get_collections().collections
                     collection_names = [collection.name for collection in collections]
                     print(f"创建后的可用集合: {collection_names}")
-                    
+
                     if self.collection_name not in collection_names:
                         print("集合创建失败，返回空结果。")
                         return []
@@ -107,7 +107,7 @@ class QdrantRetriever(BaseRetriever, BaseModel):
                 query_vector=query_vector,
                 limit=self.top_k,
             )
-            
+
             print(f"搜索结果数量: {len(search_result)}")
 
             # 转换为文档
@@ -150,7 +150,7 @@ class MultiQueryRetriever(BaseRetriever, BaseModel):
                 template="""你是一个AI助手，你的任务是生成{query_count}个不同的搜索查询，这些查询与原始查询的含义相似，但使用不同的词语和表达方式。
                 这些查询将用于检索文档，所以它们应该是独立的、多样化的，并且能够捕捉原始查询的不同方面。
                 请直接返回这些查询，每行一个，不要有编号或其他文本。
-                
+
                 原始查询: {question}
                 """.format(query_count=self.query_count, question="{question}"),
             )

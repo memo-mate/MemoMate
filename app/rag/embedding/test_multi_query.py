@@ -38,7 +38,7 @@ def test_multi_query():
             template="""你是一个AI助手，你的任务是生成3个不同的搜索查询，这些查询与原始查询的含义相似，但使用不同的词语和表达方式。
             这些查询将用于检索文档，所以它们应该是独立的、多样化的，并且能够捕捉原始查询的不同方面。
             请直接返回这些查询，每行一个，不要有编号或其他文本。
-            
+
             原始查询: {question}
             """,
         )
@@ -93,7 +93,7 @@ def test_multi_query():
         if len(unique_docs) > 0:
             print("文档内容:")
             for i, doc in enumerate(unique_docs):
-                print(f"文档 {i+1}:")
+                print(f"文档 {i + 1}:")
                 print(f"内容: {doc.page_content}")
                 print(f"元数据: {doc.metadata}")
                 print("-" * 50)

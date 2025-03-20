@@ -43,6 +43,7 @@ dependencies = [
     "qdrant-client>=1.12.1",
     "sse-starlette>=2.2.1",
     "websockets>=15.0.1",
+    "faster-whisper>=1.1.1",
 ]
 
 [dependency-groups]

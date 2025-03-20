@@ -208,18 +208,18 @@ class RAGEvaluator(BaseModel):
         # 创建评估提示
         eval_prompt = ChatPromptTemplate.from_template(
             """你是一个评估AI回答质量的专家。请评估以下AI回答与参考答案的相关性。
-            
+
             问题: {question}
             AI回答: {answer}
             参考答案: {reference}
-            
+
             请给出1-5的评分，其中:
             1: 完全不相关
             2: 略微相关
             3: 部分相关
             4: 大部分相关
             5: 完全相关
-            
+
             只需返回评分数字，不要有其他文本。
             """
         )
@@ -232,10 +232,10 @@ class RAGEvaluator(BaseModel):
             # 生成回答
             answer_prompt = ChatPromptTemplate.from_template(
                 """回答以下问题，基于提供的上下文信息。如果无法从上下文中找到答案，请说"我不知道"。
-                
+
                 上下文: {context}
                 问题: {question}
-                
+
                 回答:"""
             )
 
@@ -247,9 +247,7 @@ class RAGEvaluator(BaseModel):
             eval_chain = eval_prompt | self.llm
 
             try:
-                score_text = eval_chain.invoke(
-                    {"question": query, "answer": answer, "reference": reference}
-                ).content
+                score_text = eval_chain.invoke({"question": query, "answer": answer, "reference": reference}).content
                 score = float(score_text.strip())
             except ValueError:
                 # 如果无法解析分数，默认为0
@@ -288,18 +286,18 @@ class RAGEvaluator(BaseModel):
         # 创建评估提示
         eval_prompt = ChatPromptTemplate.from_template(
             """你是一个评估AI回答质量的专家。请评估以下AI回答是否存在幻觉（即生成了不在上下文中的信息）。
-            
+
             问题: {question}
             上下文: {context}
             AI回答: {answer}
-            
+
             请给出1-5的评分，其中:
             1: 严重幻觉，回答完全不基于上下文
             2: 明显幻觉，回答大部分不基于上下文
             3: 部分幻觉，回答部分不基于上下文
             4: 轻微幻觉，回答大部分基于上下文，但有少量不准确信息
             5: 无幻觉，回答完全基于上下文
-            
+
             只需返回评分数字，不要有其他文本。
             """
         )
@@ -312,10 +310,10 @@ class RAGEvaluator(BaseModel):
             # 生成回答
             answer_prompt = ChatPromptTemplate.from_template(
                 """回答以下问题，基于提供的上下文信息。如果无法从上下文中找到答案，请说"我不知道"。
-                
+
                 上下文: {context}
                 问题: {question}
-                
+
                 回答:"""
             )
 
@@ -326,9 +324,7 @@ class RAGEvaluator(BaseModel):
             eval_chain = eval_prompt | self.llm
 
             try:
-                score_text = eval_chain.invoke(
-                    {"question": query, "context": context, "answer": answer}
-                ).content
+                score_text = eval_chain.invoke({"question": query, "context": context, "answer": answer}).content
                 score = float(score_text.strip())
             except ValueError:
                 # 如果无法解析分数，默认为0

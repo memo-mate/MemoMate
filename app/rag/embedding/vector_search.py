@@ -12,7 +12,6 @@ from app.core.config import settings
 
 __all__ = ["HuggingFaceEmbeddings"]
 
-# 定义类型变量
 T = TypeVar("T")
 
 

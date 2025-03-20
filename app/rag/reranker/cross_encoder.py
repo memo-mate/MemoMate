@@ -3,8 +3,8 @@
 from typing import Any, cast
 
 from langchain_core.documents import Document
-from sentence_transformers import CrossEncoder
 from pydantic import Field
+from sentence_transformers import CrossEncoder
 
 from app.core.config import settings
 from app.core.log_adapter import logger
@@ -68,7 +68,7 @@ class CrossEncoderReranker(BaseReranker):
 
         # 过滤低于阈值的文档
         filtered_docs_with_scores = [
-            (doc, score) for doc, score in zip(documents, scores) if score >= self.score_threshold
+            (doc, score) for doc, score in zip(documents, scores, strict=False) if score >= self.score_threshold
         ]
 
         if not filtered_docs_with_scores:
@@ -80,7 +80,7 @@ class CrossEncoderReranker(BaseReranker):
         filtered_scores = [score for _, score in filtered_docs_with_scores]
 
         # 将分数添加到文档的元数据中
-        for doc, score in zip(filtered_docs, filtered_scores):
+        for doc, score in zip(filtered_docs, filtered_scores, strict=False):
             doc.metadata["rerank_score"] = float(score)
 
         # 应用过滤

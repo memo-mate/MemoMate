@@ -10,9 +10,7 @@ sys.path.append(str(project_root))
 from langchain_core.documents import Document
 
 from app.core.log_adapter import logger
-from app.rag.reranker.base import BaseReranker
 from app.rag.reranker.cross_encoder import CrossEncoderReranker
-from app.rag.reranker.llm_reranker import LLMReranker
 
 
 def main() -> None:

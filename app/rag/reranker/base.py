@@ -1,7 +1,6 @@
 """重排序基类模块"""
 
 from abc import ABC, abstractmethod
-from typing import Any
 
 from langchain_core.documents import Document
 from pydantic import BaseModel, Field
@@ -45,7 +44,9 @@ class BaseReranker(BaseModel, ABC):
         """
         if scores:
             # 按分数排序
-            sorted_docs = [doc for _, doc in sorted(zip(scores, documents), key=lambda x: x[0], reverse=True)]
+            sorted_docs = [
+                doc for _, doc in sorted(zip(scores, documents, strict=False), key=lambda x: x[0], reverse=True)
+            ]
             return sorted_docs[: self.top_k]
 
         # 如果没有分数，直接截取前top_k个

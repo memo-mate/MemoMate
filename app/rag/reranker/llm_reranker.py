@@ -1,8 +1,8 @@
 """基于LLM的重排序器"""
 
-from typing import Any, Callable, cast
+from collections.abc import Callable
+from typing import Any, cast
 
-from langchain_core.callbacks.manager import CallbackManagerForChainRun
 from langchain_core.documents import Document
 from langchain_core.language_models import BaseLLM
 from langchain_core.output_parsers import PydanticOutputParser

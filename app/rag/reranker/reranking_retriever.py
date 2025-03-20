@@ -1,22 +1,22 @@
 """含重排序功能的检索器"""
 
-from typing import Any, List, Optional, Sequence, Dict, TypeVar, Annotated, Union, cast, Generic
+from collections.abc import Sequence
+from typing import Any, Generic, TypeVar, cast
 
 from langchain_core.callbacks.manager import (
-    CallbackManagerForRetrieverRun,
     AsyncCallbackManagerForRetrieverRun,
+    CallbackManagerForRetrieverRun,
 )
 from langchain_core.documents import Document
 from langchain_core.retrievers import BaseRetriever
-from langchain_core.runnables import RunnableConfig, ensure_config, Runnable
+from langchain_core.runnables import RunnableConfig, ensure_config
 from langchain_core.runnables.config import run_in_executor
 from pydantic import BaseModel, Field
 
 from app.core.log_adapter import logger
 from app.rag.reranker.base import BaseReranker
 
-
-Input = TypeVar("Input", bound=Union[str, Dict[str, Any]])
+Input = TypeVar("Input", bound=str | dict[str, Any])
 Output = TypeVar("Output", bound=Sequence[Document])
 
 
@@ -34,8 +34,8 @@ class RerankingRetriever(BaseRetriever, BaseModel, Generic[Input, Output]):
         arbitrary_types_allowed = True
 
     def _get_relevant_documents(
-        self, query: str, *, run_manager: Optional[CallbackManagerForRetrieverRun] = None
-    ) -> List[Document]:
+        self, query: str, *, run_manager: CallbackManagerForRetrieverRun | None = None
+    ) -> list[Document]:
         """获取相关文档并应用重排序
 
         Args:
@@ -70,9 +70,9 @@ class RerankingRetriever(BaseRetriever, BaseModel, Generic[Input, Output]):
         self,
         query: str,
         *,
-        run_manager: Optional[AsyncCallbackManagerForRetrieverRun] = None,
+        run_manager: AsyncCallbackManagerForRetrieverRun | None = None,
         **kwargs: Any,
-    ) -> List[Document]:
+    ) -> list[Document]:
         """异步获取相关文档的底层实现
 
         Args:
@@ -92,7 +92,7 @@ class RerankingRetriever(BaseRetriever, BaseModel, Generic[Input, Output]):
             run_manager=sync_manager,
         )
 
-    def invoke(self, input: Input, config: Optional[RunnableConfig] = None, **kwargs: Any) -> Output:
+    def invoke(self, input: Input, config: RunnableConfig | None = None, **kwargs: Any) -> Output:
         """获取相关文档并应用重排序
 
         Args:
@@ -109,7 +109,7 @@ class RerankingRetriever(BaseRetriever, BaseModel, Generic[Input, Output]):
         if isinstance(input, str):
             query = input
         else:
-            query = cast(Dict[str, Any], input).get("query", "")
+            query = cast(dict[str, Any], input).get("query", "")
 
         # 使用基础检索器获取初始文档集
         logger.debug(f"使用基础检索器 {type(self.base_retriever).__name__} 获取初始文档")
@@ -132,7 +132,7 @@ class RerankingRetriever(BaseRetriever, BaseModel, Generic[Input, Output]):
 
         return cast(Output, reranked_docs)
 
-    async def ainvoke(self, input: Input, config: Optional[RunnableConfig] = None, **kwargs: Any) -> Output:
+    async def ainvoke(self, input: Input, config: RunnableConfig | None = None, **kwargs: Any) -> Output:
         """异步获取相关文档并应用重排序
 
         Args:
@@ -149,7 +149,7 @@ class RerankingRetriever(BaseRetriever, BaseModel, Generic[Input, Output]):
         if isinstance(input, str):
             query = input
         else:
-            query = cast(Dict[str, Any], input).get("query", "")
+            query = cast(dict[str, Any], input).get("query", "")
 
         # 使用基础检索器获取初始文档集
         logger.debug(f"[异步] 使用基础检索器 {type(self.base_retriever).__name__} 获取初始文档")
