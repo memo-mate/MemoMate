@@ -7,7 +7,6 @@ from sse_starlette import EventSourceResponse
 
 from app.api.deps import CurrentUser
 from app.core.log_adapter import logger
-from app.models import User
 
 router = APIRouter()
 
@@ -20,10 +19,10 @@ class SSEMessage(BaseModel):
 
 
 @router.get("/sse", response_model=None, description="SSE消息Demo")
-async def sse(request: Request, current_user: User = CurrentUser):
+async def sse(request: Request, current_user: CurrentUser) -> EventSourceResponse:
     logger.info("SSE消息认证成功", user=current_user.username)
 
-    async def sse_generator() -> AsyncGenerator[dict, None]:
+    async def sse_generator() -> AsyncGenerator[str, None]:
         try:
             while True:
                 # 客户端主动断开

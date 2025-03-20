@@ -1,7 +1,7 @@
 import subprocess
 
 
-def run_figlet_lolcat(text="MemoMate", font="larry3d"):
+def run_figlet_lolcat(text: str = "MemoMate", font: str = "larry3d") -> None:
     # 使用shell=True可以支持管道操作
     # 注意：在生产环境中，如果text和font来自用户输入，应该进行适当的验证以避免命令注入
     cmd = f"figlet -f {font} {text} | lolcat"
@@ -13,7 +13,7 @@ def run_figlet_lolcat(text="MemoMate", font="larry3d"):
         print(f"命令执行出错: {result.stderr}")
 
 
-def show_all_fonts():
+def show_all_fonts() -> None:
     cmd = "showfigfonts | lolcat"
     result = subprocess.run(cmd, shell=True, text=True, capture_output=False)
     if result.returncode == 0:
