@@ -1,6 +1,6 @@
 ---
 description: 代码风格规范
-globs: 
+globs:
 alwaysApply: false
 ---
 
