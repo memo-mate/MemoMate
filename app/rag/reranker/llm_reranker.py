@@ -8,7 +8,7 @@ from langchain_core.language_models import BaseLLM
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 from app.core.log_adapter import logger
 from app.rag.reranker.base import BaseReranker
@@ -21,7 +21,7 @@ class DocumentScore(BaseModel):
     document_id: int = Field(description="文档的索引位置")
     relevance_score: float = Field(description="文档与查询的相关性分数，0-10之间")
 
-    @validator("relevance_score")
+    @field_validator("relevance_score")
     def check_score_range(cls, v: float) -> float:
         """检查分数范围"""
         if not 0 <= v <= 10:

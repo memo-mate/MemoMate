@@ -1,7 +1,6 @@
 """含重排序功能的检索器"""
 
-from collections.abc import Sequence
-from typing import Any, Generic, TypeVar, cast
+from typing import Any, cast
 
 from langchain_core.callbacks.manager import (
     AsyncCallbackManagerForRetrieverRun,
@@ -16,11 +15,8 @@ from pydantic import BaseModel, Field
 from app.core.log_adapter import logger
 from app.rag.reranker.base import BaseReranker
 
-Input = TypeVar("Input", bound=str | dict[str, Any])
-Output = TypeVar("Output", bound=Sequence[Document])
 
-
-class RerankingRetriever(BaseRetriever, BaseModel, Generic[Input, Output]):
+class RerankingRetriever(BaseRetriever, BaseModel):
     """包含重排序功能的检索器
 
     将基础检索器与重排序器结合，提高检索质量
@@ -92,7 +88,9 @@ class RerankingRetriever(BaseRetriever, BaseModel, Generic[Input, Output]):
             run_manager=sync_manager,
         )
 
-    def invoke(self, input: Input, config: RunnableConfig | None = None, **kwargs: Any) -> Output:
+    def invoke(
+        self, input: str | dict[str, Any], config: RunnableConfig | None = None, **kwargs: Any
+    ) -> list[Document]:
         """获取相关文档并应用重排序
 
         Args:
@@ -117,7 +115,7 @@ class RerankingRetriever(BaseRetriever, BaseModel, Generic[Input, Output]):
 
         if not docs:
             logger.warning("基础检索器未返回任何文档")
-            return cast(Output, [])
+            return []
 
         logger.debug(f"基础检索器返回了 {len(docs)} 个文档")
 
@@ -130,9 +128,11 @@ class RerankingRetriever(BaseRetriever, BaseModel, Generic[Input, Output]):
         logger.debug(f"使用 {type(self.reranker).__name__} 进行重排序")
         reranked_docs = self.reranker.rerank(query, docs)
 
-        return cast(Output, reranked_docs)
+        return reranked_docs
 
-    async def ainvoke(self, input: Input, config: RunnableConfig | None = None, **kwargs: Any) -> Output:
+    async def ainvoke(
+        self, input: str | dict[str, Any], config: RunnableConfig | None = None, **kwargs: Any
+    ) -> list[Document]:
         """异步获取相关文档并应用重排序
 
         Args:
@@ -157,7 +157,7 @@ class RerankingRetriever(BaseRetriever, BaseModel, Generic[Input, Output]):
 
         if not docs:
             logger.warning("[异步] 基础检索器未返回任何文档")
-            return cast(Output, [])
+            return []
 
         logger.debug(f"[异步] 基础检索器返回了 {len(docs)} 个文档")
 
@@ -170,4 +170,4 @@ class RerankingRetriever(BaseRetriever, BaseModel, Generic[Input, Output]):
         logger.debug(f"[异步] 使用 {type(self.reranker).__name__} 进行重排序")
         reranked_docs = self.reranker.rerank(query, docs)
 
-        return cast(Output, reranked_docs)
+        return reranked_docs
