@@ -18,6 +18,12 @@ uv sync
 huggingface-cli download BAAI/bge-large-zh-v1.5 --local-dir ./bge-large-zh-v1.5
 ```
 
+### 启动接口
+
+```bash
+fastapi dev app/main.py
+```
+
 ### 核心模块文档
 
 [核心模块文档](https://memo-docs.daojichang.eu.org/develop/core-modules.html)
