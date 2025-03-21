@@ -169,5 +169,8 @@ class Settings(BaseSettings):
     def UPLOAD_DIR_PATH(self) -> Path:
         return Path(self.DATA_DIR) / self.UPLOAD_DIR
 
+    # Kafka 配置
+    KAFKA_BOOTSTRAP_SERVERS: str = "localhost:9092"
+
 
 settings: Settings = Settings()  # type: ignore
