@@ -10,7 +10,7 @@ from app.core.log_adapter import logger
 class QdrantDB:
     def __init__(
         self,
-        url: str = "http://113.45.191.109:6333",
+        url: str,
         api_key: str | None = None,
     ):
         """
@@ -38,6 +38,14 @@ class QdrantDB:
             bool: 是否成功创建
         """
         logger.info(f"创建集合 {collection_name}")
+        if force:
+            self.delete_collection(collection_name)
+        else:
+            # 检查集合是否存在
+            if self.client.collection_exists(collection_name):
+                logger.info(f"集合 {collection_name} 已存在")
+                return False
+
         self.client.create_collection(
             collection_name=collection_name, vectors_config=VectorParams(size=vector_size, distance=distance)
         )
@@ -58,7 +66,7 @@ class QdrantDB:
 
     def add_vectors(
         self, collection_name: str, vectors: list[list[float]], metadatas: list[dict[str, Any]] | None = None
-    ) -> list[int]:
+    ) -> list[str]:
         """
         将向量添加到集合中
 
@@ -67,7 +75,7 @@ class QdrantDB:
             vectors: 向量列表
             metadatas: 元数据列表
         Returns:
-            list[int]: 添加的向量ID列表
+            list: 添加的向量ID列表
         """
 
         if metadatas is None:
@@ -81,7 +89,7 @@ class QdrantDB:
         self.client.upsert(collection_name=collection_name, points=points)
         logger.info(f"向集合 {collection_name} 添加了 {len(vectors)} 条文本")
 
-        return [point.id for point in points]
+        return [str(point.id) for point in points]
 
     def delete_vectors(self, collection_name: str, ids: list[int]) -> bool:
         """
@@ -119,7 +127,7 @@ class QdrantDB:
                 {
                     "id": result.id,
                     "score": result.score,
-                    "metadata": {k: v for k, v in result.payload.items()},
+                    "metadata": dict(result.payload) if result.payload is not None else {},
                 }
             )
 
@@ -128,8 +136,7 @@ class QdrantDB:
     def search_by_metadata(
         self,
         collection_name: str,
-        metadata_key: str,
-        metadata_value: Any,
+        metadatas: dict[str, Any],
         limit: int = 5,
     ) -> list[dict[str, Any]]:
         """
@@ -137,26 +144,26 @@ class QdrantDB:
 
         Args:
             collection_name: 集合名称
-            metadata_key: 元数据键
-            metadata_value: 元数据值
+            metadatas: 元数据
             limit: 返回结果数量
 
         Returns:
             list[dict[str, Any]]: 搜索结果
         """
-        filter = Filter(must=[FieldCondition(key=metadata_key, match=MatchValue(value=metadata_value))])
+        filter = Filter(
+            must=[FieldCondition(key=key, match=MatchValue(value=value)) for key, value in metadatas.items()]
+        )
 
-        search_result = self.client.scroll(collection_name=collection_name, limit=limit, filter=filter)[0]
+        search_result = self.client.query_points(
+            collection_name=collection_name,
+            query_filter=filter,
+            with_payload=True,
+            limit=limit,
+        ).points
 
         results = []
         for result in search_result:
-            results.append(
-                {
-                    "id": result.id,
-                    "metadata": {k: v for k, v in result.payload.items()},
-                }
-            )
-
+            results.append({"id": result.id, "metadata": dict(result.payload) if result.payload is not None else {}})
         return results
 
     def update_vector(

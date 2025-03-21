@@ -142,10 +142,14 @@ class Settings(BaseSettings):
     TAVILY_API_KEY: str = ""
 
     # 嵌入模块配置
+    EMBEDDING_API_KEY: str = ""
     EMBEDDING_MODEL: str = "BAAI/bge-large-zh-v1.5"
-    DEFAULT_COLLECTION_NAME: str = "documents"
+    EMBEDDING_URL: str = ""
     EMBEDDING_DIMENSION: int = 1024
-    EMBEDDING_MULTI_PROCESS: bool = False
+
+    # Qrant 配置
+    QDRANT_URL: str = ""
+    QDRANT_API_KEY: str = ""
 
     # 重排序模块配置
     RERANKER_MODEL_PATH: str = "BAAI/bge-reranker-v2-m3"
