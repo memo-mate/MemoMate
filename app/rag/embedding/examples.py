@@ -1,6 +1,5 @@
 import json
 import os
-import time
 import uuid
 
 # 禁用LangSmith追踪
@@ -13,12 +12,12 @@ from qdrant_client.http import models
 from rich import print
 
 from app.core.config import settings
-from app.rag.embedding.document_processor import DocumentProcessor
-from app.rag.embedding.evaluation import RetrievalEvaluator
-from app.rag.embedding.index_manager import IndexManager
-from app.rag.embedding.retriever import MultiQueryRetriever, QdrantRetriever
-from app.rag.embedding.vector_search import HuggingFaceEmbeddings
-from app.rag.embedding.vector_store import QdrantStore
+
+# from app.rag.embedding.evaluation import RetrievalEvaluator
+# from app.rag.embedding.index_manager import IndexManager
+# from app.rag.embedding.retriever import MultiQueryRetriever, QdrantRetriever
+# from app.rag.embedding.vector_search import HuggingFaceEmbeddings
+# from app.rag.embedding.vector_store import QdrantStore
 
 
 def example_embedding() -> None:
@@ -441,22 +440,57 @@ def example_evaluation() -> None:
     client.close()
 
 
+def example_embed_db() -> None:
+    """嵌入数据库示例"""
+    print("\n=== 嵌入数据库示例 ===")
+
+    from app.rag.embedding.embed_db import QdrantDB
+    from app.rag.embedding.embeeding_model import SiliconCloudEmbedding
+
+    embedding_model = SiliconCloudEmbedding(
+        key=settings.OPENAI_API_KEY,
+        model_name=settings.EMBEDDING_MODEL,
+        base_url="https://api.siliconflow.cn/v1/embeddings",
+    )
+
+    texts = [
+        "人工智能是计算机科学的一个分支，致力于开发能够模拟人类智能的系统。",
+        "机器学习是人工智能的一个子领域，专注于让计算机系统从数据中学习。",
+        "深度学习是机器学习的一种方法，使用神经网络进行学习。",
+        "自然语言处理是人工智能的一个分支，专注于让计算机理解和生成人类语言。",
+        "计算机视觉是人工智能的一个分支，专注于让计算机理解和处理图像和视频。",
+    ]
+
+    db = QdrantDB()
+    db.create_collection(collection_name="test", vector_size=1024, distance="Cosine")
+
+    embeddings = embedding_model.embed_documents(texts)
+    metadatas = [{"text": text, "source": "AI介绍", "author": "示例作者"} for text in texts]
+
+    db.add_vectors(collection_name="test", vectors=embeddings, metadatas=metadatas)
+
+    results = db.search_by_vector(
+        collection_name="test", query_vector=embedding_model.embed_query("什么是机器学习？"), limit=3
+    )
+
+    print(results)
+
+
 def run_examples() -> None:
     """运行所有示例"""
-    # 创建数据库目录
-    os.makedirs(settings.VECTOR_STORE_PATH, exist_ok=True)
+    example_embed_db()
 
     # 运行示例
-    example_embedding()
-    example_document_processing()
-    example_vector_store()
-    example_retriever()
-    example_index_manager()
+    # example_embedding()
+    # example_document_processing()
+    # example_vector_store()
+    # example_retriever()
+    # example_index_manager()
 
-    # 添加延迟，确保资源被释放
-    time.sleep(1)
+    # # 添加延迟，确保资源被释放
+    # time.sleep(1)
 
-    example_evaluation()
+    # example_evaluation()
 
 
 if __name__ == "__main__":

@@ -45,6 +45,7 @@ dependencies = [
     "websockets>=15.0.1",
     "faster-whisper>=1.1.1",
     "kafka-python>=2.1.2",
+    "types-requests>=2.32.0.20250306",
 ]
 
 [dependency-groups]

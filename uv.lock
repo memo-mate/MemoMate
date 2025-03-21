@@ -1773,6 +1773,7 @@ dependencies = [
     { name = "structlog" },
     { name = "tavily-python" },
     { name = "tenacity" },
+    { name = "types-requests" },
     { name = "unstructured", extra = ["md"] },
     { name = "websockets" },
 ]
@@ -1830,6 +1831,7 @@ requires-dist = [
     { name = "structlog", specifier = ">=25.1.0" },
     { name = "tavily-python", specifier = ">=0.5.1" },
     { name = "tenacity", specifier = ">=8.2.3,<10.0.0" },
+    { name = "types-requests", specifier = ">=2.32.0.20250306" },
     { name = "unstructured", extras = ["md"], specifier = ">=0.16.23" },
     { name = "websockets", specifier = ">=15.0.1" },
 ]
@@ -3751,6 +3753,18 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/d2/ab/3910b323908a848e7852c3d0b2bdf0f027cc293dc1650c8911b16cd32227/types_pytz-2025.1.0.20250318.tar.gz", hash = "sha256:97e0e35184c6fe14e3a5014512057f2c57bb0c6582d63c1cfcc4809f82180449", size = 10450 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c9/7c/c94c1c3c8f4d70ca205ac94be714cfbe723fa93fdb9a41ca608ddd21de39/types_pytz-2025.1.0.20250318-py3-none-any.whl", hash = "sha256:04dba4907c5415777083f9548693c6d9f80ec53adcaff55a38526a3f8ddcae04", size = 10063 },
+]
+
+[[package]]
+name = "types-requests"
+version = "2.32.0.20250306"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "urllib3" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/09/1a/beaeff79ef9efd186566ba5f0d95b44ae21f6d31e9413bcfbef3489b6ae3/types_requests-2.32.0.20250306.tar.gz", hash = "sha256:0962352694ec5b2f95fda877ee60a159abdf84a0fc6fdace599f20acb41a03d1", size = 23012 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/99/26/645d89f56004aa0ba3b96fec27793e3c7e62b40982ee069e52568922b6db/types_requests-2.32.0.20250306-py3-none-any.whl", hash = "sha256:25f2cbb5c8710b2022f8bbee7b2b66f319ef14aeea2f35d80f18c9dbf3b60a0b", size = 20673 },
 ]
 
 [[package]]

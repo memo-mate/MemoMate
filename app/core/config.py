@@ -142,8 +142,7 @@ class Settings(BaseSettings):
     TAVILY_API_KEY: str = ""
 
     # 嵌入模块配置
-    EMBEDDING_MODEL_PATH: str = "BAAI/bge-large-zh-v1.5"
-    VECTOR_STORE_PATH: str = "app/rag/embedding/database"
+    EMBEDDING_MODEL: str = "BAAI/bge-large-zh-v1.5"
     DEFAULT_COLLECTION_NAME: str = "documents"
     EMBEDDING_DIMENSION: int = 1024
     EMBEDDING_MULTI_PROCESS: bool = False
