@@ -45,7 +45,6 @@ dependencies = [
     "websockets>=15.0.1",
     "faster-whisper>=1.1.1",
     "kafka-python>=2.1.2",
-    "types-requests>=2.32.0.20250306",
 ]
 
 [dependency-groups]
@@ -61,6 +60,7 @@ dev = [
     "types-passlib>=1.7.7.20241221",
     "coverage>=7.6.12",
     "pytest-asyncio>=0.25.3",
+    "types-requests>=2.32.0.20250306",
 ]
 
 [tool.mypy]
