@@ -8,8 +8,9 @@ import json
 import os
 import warnings
 from datetime import timedelta
-from rich.progress import track
+
 from faster_whisper import WhisperModel
+from rich.progress import track
 
 
 def format_timestamp(seconds: float) -> str:
@@ -68,11 +69,7 @@ def extract_subtitle(file_path: str, output_format: str = "srt", language: str |
         elif output_format == "json":
             segments_list = []
             for segment in track(segments, desc="生成JSON字幕"):
-                segments_list.append({
-                    "start": segment.start,
-                    "end": segment.end,
-                    "text": segment.text.strip()
-                })
+                segments_list.append({"start": segment.start, "end": segment.end, "text": segment.text.strip()})
 
             with open(output_path, "w", encoding="utf-8") as f:
                 json.dump(segments_list, f, ensure_ascii=False, indent=2)
