@@ -14,7 +14,7 @@ class QdrantStore(BaseModel):
     """Qdrant向量存储实现"""
 
     collection_name: str = "documents"
-    path: str | None = Field(default="app/database")
+    path: str | None = Field(default=...)
     url: str | None = Field(default=None)
     prefer_grpc: bool = Field(default=True)
     embedding_model: Embeddings | None = None

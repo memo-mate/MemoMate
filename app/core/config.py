@@ -35,7 +35,7 @@ class Settings(BaseSettings):
         # 忽略未定义的配置
         extra="ignore",
     )
-    API_V1_STR: str = "/api/v1"
+    API_V1_STR: str = ""
     SECRET_KEY: str = secrets.token_urlsafe(32)
     # 60 minutes * 24 hours * 8 days = 8 days
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8
@@ -157,6 +157,17 @@ class Settings(BaseSettings):
     MULTI_QUERY_COUNT: int = 3
     VECTOR_WEIGHT: float = 0.7
     KEYWORD_WEIGHT: float = 0.3
+
+    # 数据目录
+    DATA_DIR: str = "data"
+
+    # 上传文件目录
+    UPLOAD_DIR: str = "uploads"
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def UPLOAD_DIR_PATH(self) -> Path:
+        return Path(self.DATA_DIR) / self.UPLOAD_DIR
 
 
 settings: Settings = Settings()  # type: ignore

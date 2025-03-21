@@ -16,7 +16,7 @@ from app.core.config import *  # noqa: F403
 
 def test_multi_query():
     try:
-        client = QdrantClient(path="app/database", prefer_grpc=True)
+        client = QdrantClient(path=..., prefer_grpc=True)
 
         question = "马梓康会开滴滴吗?"
         llm = ChatOpenAI(

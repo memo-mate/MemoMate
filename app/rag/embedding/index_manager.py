@@ -14,7 +14,7 @@ from app.rag.embedding.vector_store import QdrantStore
 class IndexManager(BaseModel):
     """索引管理器"""
 
-    vector_store_path: str = Field(default="app/database")
+    vector_store_path: str = Field(default=...)
     embedding_model_path: str = Field(default="BAAI/bge-large-zh-v1.5")
     collection_name: str = Field(default="documents")
     embeddings: HuggingFaceEmbeddings = None
