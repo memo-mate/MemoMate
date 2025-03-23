@@ -40,35 +40,18 @@ class DocumentFileTaskType(StrEnum):
     wav = ".wav"
     mp4 = ".mp4"
     avi = ".avi"
+    json = ".json"
+    jsonl = ".jsonl"
 
     @classmethod
     def get_file_type(cls, file_name: str) -> Self:
         """获取文件类型"""
         suffix = "." + file_name.rsplit(".", 1)[-1].lower()
-        match suffix:
-            case ".txt":
-                return cls.txt
-            case ".csv":
-                return cls.csv
-            case ".pdf":
-                return cls.pdf
-            case ".docx":
-                return cls.docx
-            case ".doc":
-                return cls.doc
-            case ".xlsx":
-                return cls.xlsx
-            case ".xls":
-                return cls.xls
-            case ".pptx":
-                return cls.pptx
-            case ".mp3":
-                return cls.mp3
-            case ".wav":
-                return cls.wav
-            case ".mp4":
-                return cls.mp4
-            case ".avi":
-                return cls.avi
-            case _:
-                raise ValueError(f"Unsupported file type: {suffix}")
+
+        # 动态查找匹配的枚举值
+        for file_type in cls:
+            if file_type.value == suffix:
+                return file_type
+
+        # 如果没有找到匹配的文件类型，抛出异常
+        raise ValueError(f"不支持的文件类型: {suffix}")
