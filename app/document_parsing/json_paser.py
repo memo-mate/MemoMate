@@ -4,7 +4,9 @@ import orjson
 import pandas as pd
 from langchain_core.documents import Document
 
+from app.core import consts, logger
 from app.enums.task import DocumentFileTaskType
+from app.rag.llm.tokenizers import TokenCounter, TokenizerType
 
 """
 Todo List:
@@ -129,6 +131,24 @@ class JsonParser:
             case _:
                 raise ValueError(f"Invalid data type: {type(data)}")
 
+    def is_need_split_df(self, df: pd.DataFrame) -> bool:
+        """
+        如果整表的 token 数超出限制，将 df 按行分割
+        """
+        max_tokens = consts.BGE_MAX_TOKENS
+        counter = TokenCounter(TokenizerType.TRANSFORMERS, consts.BGE_MODEL_PATH)
+        table = df.to_json(orient="records", date_format="iso", lines=True)
+        tokens = counter.estimate_tokens(table)
+        if tokens > max_tokens:
+            return True
+        else:
+            real_tokens = counter.count_tokens(table)
+            logger.debug(f"real_tokens: {real_tokens}, max_tokens: {max_tokens}")
+            if real_tokens > max_tokens:
+                return True
+            else:
+                return False
+
     def chunk(
         self,
         data: list[pd.DataFrame],
@@ -143,10 +163,12 @@ class JsonParser:
             "file_name": file_name,
             "file_type": file_type,
         }
+        is_need_split = is_row or self.is_need_split_df(data)
 
         for df in data:
-            if is_row:
+            if is_need_split:
                 for _, row in df.iterrows():
+                    # TODO: 当 row 的 token 数超出限制，将 row 按列分割
                     documents.append(
                         Document(
                             page_content=row.to_json(orient="records", date_format="iso", lines=True),

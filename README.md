@@ -15,7 +15,8 @@ uv sync
 ### 下载bge
 
 ```bash
-huggingface-cli download BAAI/bge-large-zh-v1.5 --local-dir ./bge-large-zh-v1.5
+# huggingface-cli download BAAI/bge-large-zh-v1.5 --local-dir ./bge-large-zh-v1.5
+huggingface-cli download BAAI/bge-m3 --local-dir ./models/bge-m3
 ```
 
 ### 启动接口
