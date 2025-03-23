@@ -41,10 +41,20 @@
   "cSpell.words": ["ondelete", "wechat"],
   // mypy
   "mypy.enabled": true,
-  "mypy.runUsingActiveInterpreter": true
+  "mypy.runUsingActiveInterpreter": true,
   // "mypy.args": [
   //     "--no-strict-optional",
   //     "--no-warn-unreachable",
   //     "--no-warn-no-return"
   // ]
+  // ruff
+  "[python]": {
+    // 仅对 python 文件生效
+    "editor.defaultFormatter": "charliermarsh.ruff", // 默认使用 Ruff 格式化
+    "editor.formatOnSave": true, // 保存时自动格式化
+    "editor.codeActionsOnSave": {
+      "source.fixAll.ruff": "explicit", // 保存时自动修复可修复的 lint 错误
+      "source.organizeImports.ruff": "explicit" // 保存时自动排序 import 语句
+    }
+  }
 }
