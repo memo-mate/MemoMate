@@ -155,7 +155,7 @@ class MarkdownParser:
         """
         fixed_chunks = []
 
-        for i, chunk in enumerate(chunks):
+        for chunk in chunks:
             content = chunk.page_content
             metadata = chunk.metadata.copy()
 
@@ -193,7 +193,7 @@ class MarkdownParser:
                         if "|" in line and not header_found:
                             # 计算分隔符
                             separator = "|"
-                            for cell in (
+                            for _cell in (
                                 line.split("|")[1:-1]
                                 if line.startswith("|") and line.endswith("|")
                                 else line.split("|")
