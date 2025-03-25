@@ -152,14 +152,7 @@ class Settings(BaseSettings):
     QDRANT_API_KEY: str = ""
 
     # 重排序模块配置
-    RERANKER_MODEL_PATH: str = "BAAI/bge-reranker-v2-m3"
-    RERANKER_TOP_K: int = 5
-
-    # 检索配置
-    RETRIEVER_TOP_K: int = 5
-    MULTI_QUERY_COUNT: int = 3
-    VECTOR_WEIGHT: float = 0.7
-    KEYWORD_WEIGHT: float = 0.3
+    RERANKER_MODEL: str = "BAAI/bge-reranker-v2-m3"
 
     # 数据目录
     DATA_DIR: str = "data"

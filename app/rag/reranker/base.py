@@ -3,12 +3,16 @@
 from abc import ABC, abstractmethod
 
 from langchain_core.documents import Document
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from app.core.log_adapter import logger
 
+__all__ = [
+    "BaseReranker",
+]
 
-class BaseReranker(BaseModel, ABC):
+
+class BaseReranker(ABC):
     """重排序器基类
 
     用于对检索出的文档进行重新排序，提高检索质量
@@ -16,8 +20,8 @@ class BaseReranker(BaseModel, ABC):
 
     top_k: int = Field(default=5, description="返回的文档数量")
 
-    class Config:
-        arbitrary_types_allowed = True
+    def __init__(self, top_k: int = 5) -> None:
+        self.top_k = top_k
 
     @abstractmethod
     def rerank(self, query: str, documents: list[Document]) -> list[Document]:

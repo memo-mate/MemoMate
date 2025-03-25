@@ -2,8 +2,9 @@
 
 from langchain_core.documents import Document
 
+from app.core.config import settings
 from app.core.log_adapter import logger
-from app.rag.reranker.cross_encoder import CrossEncoderReranker
+from app.rag.reranker.cross_encoder import SiliconCloudCrossEncoderReranker
 
 
 def main() -> None:
@@ -28,14 +29,19 @@ def main() -> None:
     query = "中国的经济中心在哪里？"
     logger.info("设置查询", query=query)
 
-    # 测试交叉编码器重排序器
-    logger.info("测试交叉编码器重排序器")
-    cross_encoder = CrossEncoderReranker(top_k=3)
+    # 测试API交叉编码器重排序器
+    logger.info("测试硅基流动API交叉编码器重排序器")
+    silicon_cloud_cross_encoder = SiliconCloudCrossEncoderReranker(
+        api_key=settings.OPENAI_API_KEY,
+        base_url="https://api.siliconflow.cn/v1/rerank",
+        model_name="BAAI/bge-reranker-v2-m3",
+        top_k=3,
+    )
 
-    reranked_results = cross_encoder.rerank(query, documents)
+    silicon_cloud_reranked_results = silicon_cloud_cross_encoder.rerank(query, documents)
 
-    logger.info("交叉编码器重排序结果")
-    for i, doc in enumerate(reranked_results, 1):
+    logger.info("硅基流动API交叉编码器重排序结果")
+    for i, doc in enumerate(silicon_cloud_reranked_results, 1):
         logger.info(f"结果 {i}", content=doc.page_content, score=doc.metadata.get("rerank_score", "无分数"))
 
     logger.info("示例运行完成")
