@@ -66,6 +66,7 @@ dev = [
 [tool.mypy]
 strict = true
 exclude = ["venv", ".venv", "alembic"]
+
 # 忽略指定位置的特定错误
 [[tool.mypy.overrides]]
 module = "app.rag.llm.completions"
@@ -102,8 +103,11 @@ ignore = [
 # Preserve types, even if a file imports `from __future__ import annotations`.
 keep-runtime-typing = true
 
-[[tool.uv.index]]
-name = "tsinghua"
-url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple"
-priority = "primary"
-default = true
+
+# [[tool.uv.index]]
+# name = "ustc"
+# url = "https://mirrors.ustc.edu.cn/pypi/simple"
+
+# [[tool.uv.index]]
+# name = "tsinghua"
+# url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple"
