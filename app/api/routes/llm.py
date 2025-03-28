@@ -1,21 +1,21 @@
 import asyncio
+import uuid
 from collections.abc import AsyncGenerator
 from typing import Any, Literal
 
 import orjson
-from fastapi import APIRouter, Depends, Request, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Request, WebSocket, WebSocketDisconnect
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableConfig
 from pydantic import BaseModel, Field
 from sse_starlette import EventSourceResponse
 
 from app.api.demo.sse import SSEMessage
-from app.api.deps import get_current_user
 from app.core import logger, settings
 from app.rag.llm.completions import LLM, LLMParams, ModelAPIType, RAGLLMPrompt
 from app.schemas.llm import ChatRequest, ChatResponse
 
-router = APIRouter(dependencies=[Depends(get_current_user)])
+router = APIRouter()  # dependencies=[Depends(get_current_user)]
 
 
 class WebSocketChatMessage(BaseModel):
@@ -28,7 +28,7 @@ async def chat(params: ChatRequest) -> Any:
     """对话接口"""
     # 创建提示
     prompt = RAGLLMPrompt(
-        prompt=ChatPromptTemplate.from_template("""{question}"""),
+        prompt=ChatPromptTemplate.from_template("""{question}{context}"""),
         context="",
         question=params.message,
     )
@@ -44,7 +44,7 @@ async def chat(params: ChatRequest) -> Any:
 
     # 创建LLM并生成响应
     llm_chain = LLM().generate(prompt, llm_params)
-    response = llm_chain.invoke(prompt.model_dump(exclude=["context"]), RunnableConfig(callbacks=[]))
+    response = llm_chain.invoke(prompt.model_dump(), RunnableConfig(callbacks=[]))
 
     logger.info("应用LLM响应", content=response.content)
 
@@ -61,7 +61,7 @@ async def chat_sse(
 
     # 创建提示
     prompt = RAGLLMPrompt(
-        prompt=ChatPromptTemplate.from_template("""{question}"""),
+        prompt=ChatPromptTemplate.from_template("""{question}{context}"""),
         context="",
         question=params.message,
     )
@@ -80,31 +80,28 @@ async def chat_sse(
 
     async def sse_generator() -> AsyncGenerator[str, None]:
         try:
-            msg_id = 0  # 消息ID
+            msg_id = str(uuid.uuid4())  # 消息ID
             full_response = ""  # 完整的响应内容
 
             # 使用astream方法获取流式输出
-            async for chunk in llm_chain.astream(
-                prompt.model_dump(exclude=["context"]),
-                RunnableConfig(callbacks=[]),
-            ):
+            async for chunk in llm_chain.astream(prompt.model_dump(), RunnableConfig(callbacks=[])):
                 # 客户端主动断开
                 if await request.is_disconnected():
                     logger.info(f"Disconnected from client {request.client}")
                     break
 
-                msg_id += 1
-
                 # 获取当前块的内容
                 chunk_content = chunk.content if hasattr(chunk, "content") else str(chunk)
+                if not chunk_content or chunk_content.strip() == "" and not full_response:
+                    continue
                 full_response += chunk_content
 
                 # 创建SSE消息并发送
-                message = SSEMessage(event="chat_message", id=str(msg_id), retry=3000, data=chunk_content)
+                message = SSEMessage(event="chat_message", id=msg_id, retry=3000, data=chunk_content)
                 yield message.model_dump_json()
 
             # 发送完成事件
-            message = SSEMessage(event="chat_complete", id=str(msg_id + 1), retry=3000, data=full_response)
+            message = SSEMessage(event="chat_complete", id=msg_id, retry=3000, data=full_response)
             yield message.model_dump_json()
 
             logger.info("流式响应完成", full_response=full_response)
@@ -118,13 +115,8 @@ async def chat_sse(
 
 
 @router.websocket("/chat/ws")
-async def chat_ws(
-    websocket: WebSocket,
-    params: ChatRequest,
-) -> Any:
+async def chat_ws(websocket: WebSocket) -> Any:
     """websocket对话流式接口"""
-    logger.info("websocket对话流式接口", params=params)
-
     await websocket.accept()
     logger.info("WebSocket 连接已建立")
 
@@ -167,7 +159,7 @@ async def chat_ws(
                         continue
 
                     # 发送消息
-                    async def background_chunk_message() -> None:
+                    async def background_chunk_message(message: str, msg_id: str) -> None:
                         try:
                             # 准备 LLM 参数
                             llm_params = LLMParams(
@@ -179,20 +171,26 @@ async def chat_ws(
                             )
 
                             prompt = RAGLLMPrompt(
-                                prompt=ChatPromptTemplate.from_template("""{question}"""),
+                                prompt=ChatPromptTemplate.from_template("""{question}{context}"""),
                                 context="",
-                                question=params.message,
+                                question=message,
                             )
                             # 获取生成链
                             chain = llm_instance.generate(prompt, llm_params)
-                            async for chunk in chain.astream(
-                                prompt.model_dump(exclude=["context"]), RunnableConfig(callbacks=[])
-                            ):
-                                await websocket.send_json({"type": "token", "content": chunk.content})
+                            full_response = ""
+                            async for chunk in chain.astream(prompt.model_dump(), RunnableConfig(callbacks=[])):
+                                if not chunk.content or chunk.content.strip() == "" and not full_response:
+                                    continue
+                                full_response += chunk.content
+                                await websocket.send_json({"type": "token", "id": msg_id, "content": chunk.content})
+
+                            await websocket.send_json({"type": "token", "id": msg_id, "content": full_response})
+                            logger.info("对话完成", full_response=full_response)
                         except asyncio.CancelledError:
                             logger.info("对话取消")
 
-                    current_task = asyncio.create_task(background_chunk_message())
+                    msg_id = str(uuid.uuid4())
+                    current_task = asyncio.create_task(background_chunk_message(message.content, msg_id))
                 # 未知消息类型
                 else:
                     logger.warning(f"未知消息类型: {message.type}")
