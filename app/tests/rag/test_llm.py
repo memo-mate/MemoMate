@@ -1,11 +1,17 @@
+from unittest.mock import patch
+
+from langchain_community.chat_message_histories import ChatMessageHistory
+from langchain_core.chat_history import BaseChatMessageHistory
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableConfig
 from langchain_openai import ChatOpenAI
 
+from app.core import settings
 from app.core.log_adapter import logger
 from app.rag.llm.completions import LLM, LLMParams, ModelAPIType, RAGLLMPrompt
+from app.rag.llm.history import MemoMateMemory
 
 
 def test_llm_chat() -> None:
@@ -117,7 +123,6 @@ def test_streaming_chat() -> None:
     """
     测试流式输出对话
     """
-    collected_chunks = []
 
     # 定义回调函数来收集流式输出
     class CollectStreamingOutput:
@@ -140,7 +145,11 @@ def test_streaming_chat() -> None:
     )
 
     # 发送消息
-    messages = [HumanMessage(content="用一句话描述今天的天气")]
+    messages = [
+        HumanMessage(content="用一句话描述今天的天气"),
+        AIMessage(content="今天天气晴朗，气温适宜，适合户外活动。"),
+        HumanMessage(content="用一句话描述今天的天气"),
+    ]
     response = llm.invoke(messages)
 
     logger.info("流式输出完整响应", response=response.content)
@@ -150,9 +159,55 @@ def test_streaming_chat() -> None:
     assert response.content
 
 
-if __name__ == "__main__":
-    # 直接运行此文件进行测试
-    test_simple_chat_completion()
-    test_chat_with_template()
-    test_using_app_llm_class()
-    test_streaming_chat()
+def test_memory_chat() -> None:
+    """
+    测试记忆功能
+    """
+    # 创建提示
+    prompt_text = """
+问题: {question}
+上下文: {context}"""
+
+    # 创建系统消息
+    system_message = """回答以下问题，基于提供的上下文信息。如果无法从上下文中找到答案，请从历史对话中找到答案，如果历史对话中也没有答案，请说"我不知道"。"""
+
+    prompt_template = MemoMateMemory.create_prompt_template(prompt_text, system_message)
+    # 创建参数
+    params = LLMParams(
+        api_type=ModelAPIType.OPENAI,
+        model_name=settings.CHAT_MODEL,
+        api_key=settings.OPENAI_API_KEY,
+        base_url=settings.OPENAI_API_BASE,
+        streaming=False,
+        stream_usage=False,
+    )
+
+    def _get_session_history(session_id: str) -> BaseChatMessageHistory:
+        logger.info("获取会话历史", session_id=session_id)
+        if session_id not in MemoMateMemory.store:
+            MemoMateMemory.store[session_id] = ChatMessageHistory(
+                messages=[
+                    HumanMessage(content="人工智能包括什么？"),
+                    AIMessage(content="人工智能包括机器学习、自然语言处理、计算机视觉等。"),
+                ]
+            )
+        return MemoMateMemory.store[session_id]
+
+    # mock MemoMateMemory.get_session_history 替换为 _get_session_history
+    with patch("app.rag.llm.history.MemoMateMemory.get_session_history", side_effect=_get_session_history):
+        prompt = RAGLLMPrompt(
+            prompt=prompt_template,
+            context="人工智能(AI)是计算机科学的一个分支，致力于创建能够模拟人类智能的系统。",
+            question="什么是人工智能？",
+        )
+
+        # 创建LLM并生成响应
+        llm_chain = LLM().generate(prompt, params)
+
+        memory_chain = MemoMateMemory.gen_memory_chain(llm_chain)
+        response = memory_chain.invoke(
+            {"context": prompt.context, "question": prompt.question},
+            config=RunnableConfig(session_id="test_session"),
+        )
+
+        logger.info("应用LLM响应", content=response)
