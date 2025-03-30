@@ -30,7 +30,7 @@ def delete_history_messages(*, session: Session, session_id: str) -> None:
     session.commit()
 
 
-def get_history_message_session_list(*, session: Session) -> list[HistoryMessage]:
+def get_history_message_session_list(*, session: Session, user_id: int) -> list[HistoryMessage]:
     """
     获取历史消息会话列表
 
@@ -38,6 +38,7 @@ def get_history_message_session_list(*, session: Session) -> list[HistoryMessage
     """
     statement = (
         select(HistoryMessage)
+        .where(HistoryMessage.user_id == user_id)
         .distinct(HistoryMessage.session_id)  # 只选每个 session_id 的第一条记录
         .order_by(HistoryMessage.session_id, HistoryMessage.created_at)  # 先按 session_id 排序，再按创建时间排序
     )
