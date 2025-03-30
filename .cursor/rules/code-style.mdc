@@ -1,7 +1,7 @@
 ---
-description: 代码风格规范
+description:
 globs:
-alwaysApply: false
+alwaysApply: true
 ---
 
 # 代码风格规范
@@ -18,3 +18,5 @@ except Exception as e:
 ```
 ## 使用pydantic做数据校验
 ## 使用最新版本 langchain 实现rag和agent、llm等功能
+
+## 数据库使用SQLModel进行ORM操作，
