@@ -1,15 +1,19 @@
 from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_core.chat_history import BaseChatMessageHistory
+from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables import Runnable, RunnableWithMessageHistory
+from sqlmodel import Session
+
+from app.core.db import engine
+from app.crud.history_message import get_history_messages
+from app.enums import HistoryMessageType
 
 
 class MemoMateMemory:
     """
-    记忆助手
+    记忆能力封装类
     """
-
-    store = {}
 
     @staticmethod
     def create_prompt_template(template_str: str, system_message: str | None = None):
@@ -58,15 +62,12 @@ class MemoMateMemory:
         session_id: 会话ID
         return: 会话历史
         """
-        if session_id not in MemoMateMemory.store:
-            # TODO(Daoji): 从数据库中获取会话历史
-            MemoMateMemory.store[session_id] = ChatMessageHistory()
-        return MemoMateMemory.store[session_id]
-
-    @staticmethod
-    def save_session_history(session_id: str, history: BaseChatMessageHistory) -> None:
-        """
-        保存会话历史
-        """
-        # TODO(Daoji): 从数据库中保存会话历史
-        MemoMateMemory.store[session_id] = history
+        with Session(engine) as session:
+            history_messages = get_history_messages(session=session, session_id=session_id)
+            base_messages = []
+            for msg in history_messages:
+                if msg.message_type == HistoryMessageType.HUMAN:
+                    base_messages.append(HumanMessage(content=msg.message))
+                elif msg.message_type == HistoryMessageType.AI:
+                    base_messages.append(AIMessage(content=msg.message))
+            return ChatMessageHistory(messages=base_messages)
