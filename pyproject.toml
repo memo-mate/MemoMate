@@ -7,7 +7,6 @@ requires-python = ">=3.12"
 dependencies = [
     "httpx[socks]>=0.28.1",
     "huggingface-hub>=0.29.1",
-    "lancedb>=0.20.0",
     "langchain>=0.3.19",
     "langchain-community>=0.3.18",
     "langchain-huggingface>=0.1.2",
