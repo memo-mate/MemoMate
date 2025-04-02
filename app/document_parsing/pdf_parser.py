@@ -9,14 +9,22 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from app.core import settings
 from app.core.log_adapter import logger
-from app.document_parsing.pdf.models import PDFContentType, PdfParserConfig, PDFSection, TOCEntry
+from app.document_parsing.common import (
+    CHINESE_NUMERALS,
+    COMMON_TITLE_KEYWORDS,
+    TITLE_PATTERNS,
+    DocumentContentType,
+    DocumentSection,
+    ParserConfig,
+    TOCEntry,
+)
 
 
 class PdfParser:
     """PDF解析器"""
 
-    def __init__(self, config: PdfParserConfig = None):
-        self.config = config or PdfParserConfig()
+    def __init__(self, config: ParserConfig = None):
+        self.config = config or ParserConfig()
         self._suppress_pdf_warnings()
 
     def _suppress_pdf_warnings(self):
@@ -31,7 +39,9 @@ class PdfParser:
         logging.getLogger("fitz").setLevel(logging.ERROR)
         logging.getLogger("PIL").setLevel(logging.ERROR)
 
-    def __call__(self, file_path: str | Path, *args: Any, **kwargs: Any) -> list[Document]:
+    def __call__(
+        self, file_path: str | Path, *args: Any, **kwargs: Any
+    ) -> list[Document]:
         "处理文档并返回分块后的文档列表"
         return self.chunk(file_path)
 
@@ -46,7 +56,7 @@ class PdfParser:
         logger.info("检测到PDF文档", file_path=str(file_path))
 
         try:
-            if self.config.strategy == PdfParserConfig.STRATEGY_STRUCTURE:
+            if self.config.strategy == ParserConfig.STRATEGY_STRUCTURE:
                 return self._structure_split(file_path)
             else:
                 return self._basic_split(file_path)
@@ -72,7 +82,9 @@ class PdfParser:
         for i, chunk in enumerate(chunks):
             chunk.metadata["chunk_index"] = i
             chunk.metadata["chunk_len"] = len(chunks)
-            estimated_page = i * chunk.page_content.count("\n\n") // (metadata["total_pages"] * 2)
+            estimated_page = (
+                i * chunk.page_content.count("\n\n") // (metadata["total_pages"] * 2)
+            )
             chunk.metadata["page"] = min(estimated_page, metadata["total_pages"] - 1)
             chunk.metadata["page_label"] = str(chunk.metadata["page"] + 1)
 
@@ -110,7 +122,7 @@ class PdfParser:
                         "title": section.title,
                         "level": section.level,
                         "page_number": section.page_number,
-                        "content_type": PDFContentType.TEXT.value,
+                        "content_type": DocumentContentType.TEXT.value,
                         "page": section.metadata.get("page"),
                         "page_label": section.metadata.get("page_label"),
                         "end_page": section.metadata.get("end_page"),
@@ -121,30 +133,57 @@ class PdfParser:
                 section_text = f"# {section.content}"
 
                 if len(section_text) <= settings.CHUNK_SIZE * 1.2:
-                    documents.append(Document(page_content=section_text, metadata=metadata))
+                    documents.append(
+                        Document(page_content=section_text, metadata=metadata)
+                    )
                 else:
                     try:
                         text_splitter = RecursiveCharacterTextSplitter(
                             chunk_size=settings.CHUNK_SIZE,
                             chunk_overlap=settings.CHUNK_OVERLAP,
                             length_function=len,
-                            separators=["\n\n", "\n", ". ", "! ", "? ", ";", ":", "  ", " ", ""],
+                            separators=[
+                                "\n\n",
+                                "\n",
+                                ". ",
+                                "! ",
+                                "? ",
+                                ";",
+                                ":",
+                                "  ",
+                                " ",
+                                "",
+                            ],
                         )
-                        sub_chunks = text_splitter.create_documents([section_text], [metadata])
-                        if sub_chunks and not sub_chunks[0].page_content.startswith(f"# {section.title}"):
+                        sub_chunks = text_splitter.create_documents(
+                            [section_text], [metadata]
+                        )
+                        if sub_chunks and not sub_chunks[0].page_content.startswith(
+                            f"# {section.title}"
+                        ):
                             title_text = f"# {section.title}\n\n"
-                            sub_chunks[0].page_content = title_text + sub_chunks[0].page_content
+                            sub_chunks[0].page_content = (
+                                title_text + sub_chunks[0].page_content
+                            )
                         for chunk in sub_chunks:
                             chunk.metadata["title"] = section.title
                             chunk.metadata["level"] = section.level
                         documents.extend(sub_chunks)
 
                     except Exception as e:
-                        logger.warning("章节分块失败，作为整块处理", section_title=section.title, error=str(e))
-                        documents.append(Document(page_content=section_text, metadata=metadata))
+                        logger.warning(
+                            "章节分块失败，作为整块处理",
+                            section_title=section.title,
+                            error=str(e),
+                        )
+                        documents.append(
+                            Document(page_content=section_text, metadata=metadata)
+                        )
 
         if not documents:
-            logger.warning("未生成任何结构化文档块，回退到基本分块", file_path=str(file_path))
+            logger.warning(
+                "未生成任何结构化文档块，回退到基本分块", file_path=str(file_path)
+            )
             return self._basic_split(file_path)
 
         for i, doc in enumerate(documents):
@@ -180,8 +219,12 @@ class PdfParser:
                     {
                         "creator": pdf_metadata.get("creator", ""),
                         "producer": pdf_metadata.get("producer", ""),
-                        "creationdate": self._convert_pdf_date(pdf_metadata.get("creationDate", "")),
-                        "moddate": self._convert_pdf_date(pdf_metadata.get("modDate", "")),
+                        "creationdate": self._convert_pdf_date(
+                            pdf_metadata.get("creationDate", "")
+                        ),
+                        "moddate": self._convert_pdf_date(
+                            pdf_metadata.get("modDate", "")
+                        ),
                     }
                 )
 
@@ -247,50 +290,65 @@ class PdfParser:
                     if not text or len(text) > 300:
                         continue
 
-                    # 获取字体特征
                     max_font_size = max(span["size"] for span in line["spans"])
-                    is_bold = any("bold" in span["font"].lower() for span in line["spans"])
+                    is_bold = any(
+                        "bold" in span["font"].lower() for span in line["spans"]
+                    )
 
-                    # 检查是否可能是标题（基于字体特征和文本特征）
-                    if not self._is_likely_title(text, max_font_size, normal_text_size, is_bold):
+                    if not self._is_likely_title(
+                        text, max_font_size, normal_text_size, is_bold
+                    ):
                         continue
 
-                    # 检查标题格式
                     title_info = self._parse_title_format(text)
                     if not title_info:
                         continue
 
                     number, title_text, level = title_info
 
-                    # 验证标题层级关系
                     if not self._validate_title_hierarchy(
-                        number, level, current_chapter, current_section, current_subsection
+                        number,
+                        level,
+                        current_chapter,
+                        current_section,
+                        current_subsection,
                     ):
                         continue
 
-                    # 更新当前层级信息
-                    if level == 1:
-                        current_chapter = number
-                        current_section = None
-                        current_subsection = None
-                    elif level == 2:
-                        if current_chapter == number.split(".")[0]:
-                            current_section = number
+                    if number:
+                        if level == 1:
+                            current_chapter = number
+                            current_section = None
                             current_subsection = None
-                    elif level == 3:
-                        if current_chapter == number.split(".")[0] and current_section == ".".join(
-                            number.split(".")[:2]
-                        ):
-                            current_subsection = number
+                        elif level == 2:
+                            if current_chapter == number.split(".")[0]:
+                                current_section = number
+                                current_subsection = None
+                        elif level == 3:
+                            if current_chapter == number.split(".")[
+                                0
+                            ] and current_section == ".".join(number.split(".")[:2]):
+                                current_subsection = number
 
-                    entries.append(TOCEntry(title=text, level=level, page_number=page_num + 1))
+                    entries.append(
+                        TOCEntry(title=text, level=level, page_number=page_num + 1)
+                    )
 
         return entries
 
     def _validate_title_hierarchy(
-        self, number: str, level: int, current_chapter: str, current_section: str, current_subsection: str
+        self,
+        number: str,
+        level: int,
+        current_chapter: str,
+        current_section: str,
+        current_subsection: str,
     ) -> bool:
         """验证标题层级关系"""
+
+        if number == "":
+            return True
+
         if re.match(r"^\d+$", number):
             parts = [number]
         elif re.match(r"^\d+\.\d+(\.\d+)?$", number):
@@ -321,14 +379,21 @@ class PdfParser:
                 try:
                     current_section_num = int(current_section.split(".")[-1])
                     new_section_num = int(parts[-1])
-                    if parts[0] == current_section.split(".")[0] and new_section_num != current_section_num + 1:
+                    if (
+                        parts[0] == current_section.split(".")[0]
+                        and new_section_num != current_section_num + 1
+                    ):
                         return False
                 except ValueError:
                     return False
             return True
 
         if level == 3:
-            if not (len(parts) == 3 and current_chapter == parts[0] and current_section == f"{parts[0]}.{parts[1]}"):
+            if not (
+                len(parts) == 3
+                and current_chapter == parts[0]
+                and current_section == f"{parts[0]}.{parts[1]}"
+            ):
                 return False
 
             if current_subsection is not None:
@@ -347,7 +412,9 @@ class PdfParser:
 
         return False
 
-    def _is_likely_title(self, text: str, font_size: float, normal_text_size: float, is_bold: bool) -> bool:
+    def _is_likely_title(
+        self, text: str, font_size: float, normal_text_size: float, is_bold: bool
+    ) -> bool:
         """判断是否可能是标题"""
         content = re.sub(r"^[\d.]+\s+", "", text).strip()
 
@@ -357,12 +424,11 @@ class PdfParser:
         if (
             text.endswith(("。", "，", "；", "："))
             or text[-1].islower()
-            or "=" in text  # 排除公式
+            or "=" in text
             or re.search(r"[a-z]+\(", text)
-        ):  # 排除函数调用
+        ):
             return False
 
-        # 字体特征检查 - 必须比正文大或者是粗体
         if not (font_size > normal_text_size * 1.1 or is_bold):
             return False
 
@@ -370,56 +436,45 @@ class PdfParser:
 
     def _parse_title_format(self, text: str) -> tuple[str, str, int] | None:
         """解析标题格式，返回(编号, 标题文本, 层级)或None"""
-        cn_nums = {"零": 0, "一": 1, "二": 2, "三": 3, "四": 4, "五": 5, "六": 6, "七": 7, "八": 8, "九": 9, "十": 10}
 
-        patterns = [
-            (r"^(\d+)\.\s+(.+)$", 1),  # 1. 标题
-            (r"^(\d+\.\d+)\s+(.+)$", 2),  # 1.1 标题
-            (r"^(\d+\.\d+\.\d+)\s+(.+)$", 3),  # 1.1.1 标题
-            (r"^第(\d+)章\s*[:：]?\s*(.+)$", 1),  # 第1章
-            (r"^第(\d+)节\s*[:：]?\s*(.+)$", 2),  # 第1节
-            (r"^第(\d+)条\s*[:：]?\s*(.+)$", 2),  # 第1条
-            (r"^第([一二三四五六七八九十百]+)章\s*[:：]?\s*(.+)$", 1),  # 第一章
-            (r"^第([一二三四五六七八九十百]+)节\s*[:：]?\s*(.+)$", 2),  # 第一节
-            (r"^第([一二三四五六七八九十百]+)条\s*[:：]?\s*(.+)$", 2),  # 第一条
-            (r"^([一二三四五六七八九十]+)、\s*(.+)$", 2),  # 一、
-            (r"^（([一二三四五六七八九十]+)）\s*(.+)$", 2),  # （一）
-            (r"^\(([一二三四五六七八九十]+)\)\s*(.+)$", 2),  # (一)
-            (r"^(\d+)、\s*(.+)$", 2),  # 1、标题
-            (r"^（(\d+)）\s*(.+)$", 2),  # （1）标题
-            (r"^\((\d+)\)\s*(.+)$", 2),  # (1)标题
-        ]
-
-        for pattern, level in patterns:
+        for pattern, level in TITLE_PATTERNS:
             match = re.match(pattern, text)
             if match:
                 number = match.group(1)
                 title_text = match.group(2).strip()
 
-                if len(title_text.split()) > 20:  # 标题不应该太长
+                if len(title_text.split()) > 20:
                     continue
 
-                # 如果是中文数字，转换为阿拉伯数字
                 if re.search(r"[一二三四五六七八九十百]", number):
                     try:
-                        # 处理"十"的特殊情况
                         if number == "十":
                             num = 10
                         elif "十" in number:
                             parts = number.split("十")
                             if parts[0]:
-                                num = cn_nums[parts[0]] * 10
+                                num = CHINESE_NUMERALS[parts[0]] * 10
                             else:
                                 num = 10
                             if parts[1]:
-                                num += cn_nums[parts[1]]
+                                num += CHINESE_NUMERALS[parts[1]]
                         else:
-                            num = cn_nums[number]
+                            num = CHINESE_NUMERALS[number]
                         number = str(num)
                     except (KeyError, ValueError):
                         continue
 
                 return number, title_text, level
+
+        if len(text) < 40 and not text.endswith(
+            ("。", "，", "；", "：", ".", ",", ";", ":")
+        ):
+            if text in COMMON_TITLE_KEYWORDS:
+                return "", text, 1  # 默认作为一级标题
+
+            for title in COMMON_TITLE_KEYWORDS:
+                if text.startswith(title) and len(text) < len(title) + 10:
+                    return "", text, 1
 
         return None
 
@@ -439,7 +494,9 @@ class PdfParser:
                 return sizes[len(sizes) // 2]
         return 11  # 默认值
 
-    def _build_sections(self, file_path: Path, toc_entries: list[TOCEntry]) -> list[PDFSection]:
+    def _build_sections(
+        self, file_path: Path, toc_entries: list[TOCEntry]
+    ) -> list[DocumentSection]:
         """根据目录条目构建文档章节结构"""
         try:
             sections = []
@@ -486,7 +543,7 @@ class PdfParser:
                     content.append(page_text)
 
                 # 创建章节对象
-                section = PDFSection(
+                section = DocumentSection(
                     title=entry.title,
                     level=entry.level,
                     page_number=entry.page_number,
@@ -500,7 +557,9 @@ class PdfParser:
                 )
                 sections.append(section)
 
-            logger.info("章节构建完成", file_path=str(file_path), section_count=len(sections))
+            logger.info(
+                "章节构建完成", file_path=str(file_path), section_count=len(sections)
+            )
             return sections
 
         except Exception as e:
@@ -510,6 +569,6 @@ class PdfParser:
 
 if __name__ == "__main__":
     parser = PdfParser()
-    parser(r"C:\Users\Leo\Desktop\从零开始大模型开发与微调基于PyTorch与ChatGLM.pdf")
-    # parser(r"C:\Users\Leo\Desktop\大规模语言模型：从理论到实践.pdf")
+    # parser(r"C:\Users\Leo\Desktop\从零开始大模型开发与微调基于PyTorch与ChatGLM.pdf")
+    parser(r"C:\Users\Leo\Desktop\大规模语言模型：从理论到实践.pdf")
     # parser(r"C:\Users\Leo\Downloads\AI大模型\大规模语言模型：从理论到实践.pdf")
