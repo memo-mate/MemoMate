@@ -92,3 +92,10 @@ def test_qdrant_vertor_store_update_vector(VS: QdrantVectorStore):
 def test_qdrant_vertor_store_delete_collection(VS: QdrantVectorStore):
     VS.delete_collection(collection_name="test")
     logger.info("删除集合: test")
+
+
+def test_qdrant_vertor_store_as_retriever(VS: QdrantVectorStore):
+    retriever = VS.as_retriever()
+    logger.info(f"检索器: {retriever}")
+    results = retriever.get_relevant_documents(query="什么是机器学习？")
+    logger.info(f"检索结果: {results}")
