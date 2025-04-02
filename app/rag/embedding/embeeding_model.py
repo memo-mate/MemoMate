@@ -18,8 +18,8 @@ class MemoMateEmbeddings:
     PS: 目前采用 langchain 封装 embedding 对象，后续考虑使用自封装函数对象
     """
 
+    @staticmethod
     def local_embedding(
-        self,
         model_name: str = "BAAI/bge-large-zh-v1.5",
         driver: EmbeddingDriverEnum = EmbeddingDriverEnum.CPU,
         normalize: bool = True,
@@ -32,8 +32,8 @@ class MemoMateEmbeddings:
         )
         return embedding_model
 
+    @staticmethod
     def openai_embedding(
-        self,
         api_key: str = settings.OPENAI_API_KEY,
         base_url: str = settings.OPENAI_API_BASE,
         model_name: str = "text-embedding-3-large",

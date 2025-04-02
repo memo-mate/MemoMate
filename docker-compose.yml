@@ -16,13 +16,6 @@ services:
     depends_on:
       - redis
       - postgres
-  memo-frontend:
-    <<: *restart_policy
-    image: memo/memo-fastapi-frontend:latest
-    ports:
-      - "53001:8080"
-    depends_on:
-      - memo-backend
   redis:
     <<: *restart_policy
     image: redis:latest
@@ -76,6 +69,13 @@ services:
       - PGADMIN_DEFAULT_PASSWORD=memo.fastapi
     volumes:
       - ./data/pgadmin-data:/var/lib/pgadmin
+  qdrant:
+    <<: *restart_policy
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"
+    environment:
+      - TZ=Asia/Shanghai
 
 # 配置文件
 # configs:

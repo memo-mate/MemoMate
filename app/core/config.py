@@ -148,8 +148,8 @@ class Settings(BaseSettings):
     EMBEDDING_DIMENSION: int = 1024
 
     # Qrant 配置
-    QDRANT_URL: str = ""
-    QDRANT_API_KEY: str = ""
+    QDRANT_URL: str = "http://localhost:6333"
+    QDRANT_API_KEY: str | None = None
 
     # 重排序模块配置
     RERANKER_MODEL: str = "BAAI/bge-reranker-v2-m3"

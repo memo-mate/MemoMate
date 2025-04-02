@@ -7,6 +7,9 @@ from app.enums import EmbeddingDriverEnum
 from app.rag.embedding.embedding_db import QdrantDB
 from app.rag.embedding.embeeding_model import MemoMateEmbeddings
 
+# 本地启动 qdrant 服务
+# docker run -d --name qdrant-server -p 6333:6333 -e QDRANT__API__HTTP_ENABLED=true -e QDRANT__API__HTTP_API_KEY=memo.fastapi qdrant/qdrant
+
 
 def test_local_embedding():
     embedding: Embeddings = MemoMateEmbeddings.local_embedding()
@@ -20,6 +23,18 @@ def test_openai_embedding():
     embedding = embedding.embed_documents(["Hello, world!"])
     assert len(embedding) == 1
     assert len(embedding[0]) == 1024
+
+
+def test_qdrant_vertor_store_instance():
+    db = QdrantDB(
+        collection_name="test",
+        embeddings=MemoMateEmbeddings.local_embedding(driver=EmbeddingDriverEnum.MAC),
+        url=settings.QDRANT_URL,
+        api_key=settings.QDRANT_API_KEY,
+        create_collection_if_not_exists=True,
+    )
+    logger.info(f"QdrantDB 客户端: {db.client}")
+    assert db.client is not None, "QdrantDB 客户端未初始化"
 
 
 def test_vertor_db():
