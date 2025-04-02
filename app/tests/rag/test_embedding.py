@@ -1,14 +1,25 @@
+import pytest
 from langchain_core.documents import Document
 from langchain_core.embeddings import Embeddings
 
 from app.core import settings
 from app.core.log_adapter import logger
 from app.enums import EmbeddingDriverEnum
-from app.rag.embedding.embedding_db import QdrantDB
+from app.rag.embedding.embedding_db import QdrantVectorStore
 from app.rag.embedding.embeeding_model import MemoMateEmbeddings
 
 # 本地启动 qdrant 服务
 # docker run -d --name qdrant-server -p 6333:6333 -e QDRANT__API__HTTP_ENABLED=true -e QDRANT__API__HTTP_API_KEY=memo.fastapi qdrant/qdrant
+
+
+@pytest.fixture
+def VS():
+    return QdrantVectorStore(
+        collection_name="test",
+        embeddings=MemoMateEmbeddings.local_embedding(driver=EmbeddingDriverEnum.MAC),
+        url=settings.QDRANT_URL,
+        api_key=settings.QDRANT_API_KEY,
+    )
 
 
 def test_local_embedding():
@@ -25,19 +36,18 @@ def test_openai_embedding():
     assert len(embedding[0]) == 1024
 
 
-def test_qdrant_vertor_store_instance():
-    db = QdrantDB(
-        collection_name="test",
-        embeddings=MemoMateEmbeddings.local_embedding(driver=EmbeddingDriverEnum.MAC),
-        url=settings.QDRANT_URL,
-        api_key=settings.QDRANT_API_KEY,
-        create_collection_if_not_exists=True,
-    )
-    logger.info(f"QdrantDB 客户端: {db.client}")
-    assert db.client is not None, "QdrantDB 客户端未初始化"
+def test_qdrant_instance(VS: QdrantVectorStore):
+    logger.info(f"QdrantDB 客户端: {VS.client}")
+    assert VS.client is not None, "QdrantDB 客户端未初始化"
 
 
-def test_vertor_db():
+def test_qdrant_list_collections(VS: QdrantVectorStore):
+    collections = VS.list_collections()
+    logger.info(f"集合列表: {collections}")
+    assert len(collections) > 0, "集合列表为空"
+
+
+def test_qdrant_add_documents(VS: QdrantVectorStore):
     texts = [
         "人工智能是计算机科学的一个分支，致力于开发能够模拟人类智能的系统。",
         "机器学习是人工智能的一个子领域，专注于让计算机系统从数据中学习。",
@@ -50,26 +60,23 @@ def test_vertor_db():
         Document(page_content=text, metadata=metadata) for text, metadata in zip(texts, metadatas, strict=True)
     ]
 
-    embedding: Embeddings = MemoMateEmbeddings.local_embedding(driver=EmbeddingDriverEnum.MAC)
-    db = QdrantDB(embeddings=embedding, url=settings.QDRANT_URL, api_key=settings.QDRANT_API_KEY)
-
-    collections = db.list_collections()
-
-    logger.info(f"集合列表: {collections}")
-
-    db.create_collection(collection_name="test", vector_size=1024)
-    logger.info("创建集合: test")
-
-    db.add_documents(collection_name="test", documents=documents)
+    VS.add_documents(collection_name="test", documents=documents)
     logger.info("添加文档: 完成")
 
-    results = db.search(collection_name="test", query_text="什么是机器学习？")
+
+def test_qdrant_vertor_store_search(VS: QdrantVectorStore):
+    results = VS.search(query="什么是机器学习？", search_type="similarity_score_threshold", score_threshold=0.5)
     logger.info(f"搜索结果: {results}")
 
-    results = db.search_by_metadata(collection_name="test", metadatas={"source": "AI介绍", "author": "示例作者"})
+
+def test_qdrant_vertor_store_search_by_metadata(VS: QdrantVectorStore):
+    results = VS.search_by_metadata(metadatas={"source": "AI介绍", "author": "示例作者"})
     logger.info(f"通过元数据搜索结果: {results}")
 
-    db.update_vector(
+
+def test_qdrant_vertor_store_update_vector(VS: QdrantVectorStore):
+    results = VS.search_by_metadata(metadatas={"source": "AI介绍", "author": "示例作者"})
+    VS.update_vector(
         collection_name="test",
         id=results[0]["id"],
         text="什么是深度学习？",
@@ -81,8 +88,7 @@ def test_vertor_db():
     )
     logger.info("更新向量: 完成")
 
-    results = db.search(collection_name="test", query_text="什么是机器学习？")
-    logger.info(f"重新搜索结果: {results}")
 
-    db.delete_collection(collection_name="test")
+def test_qdrant_vertor_store_delete_collection(VS: QdrantVectorStore):
+    VS.delete_collection(collection_name="test")
     logger.info("删除集合: test")

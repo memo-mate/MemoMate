@@ -1,3 +1,3 @@
-from .custom_qdrant import QdrantDB
+from .custom_qdrant import QdrantVectorStore
 
-__all__ = ["QdrantDB"]
+__all__ = ["QdrantVectorStore"]

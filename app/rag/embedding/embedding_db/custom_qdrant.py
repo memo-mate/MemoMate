@@ -1,7 +1,8 @@
 import uuid
-from collections.abc import Callable
-from typing import Any, TypedDict
+from collections.abc import Callable, Iterable
+from typing import Any, Literal, TypedDict
 
+import numpy as np
 from langchain_community.vectorstores import VectorStore
 from langchain_core.documents import Document
 from langchain_core.embeddings import Embeddings
@@ -17,7 +18,7 @@ class ScoreDocumentDict(TypedDict):
     doc: Document
 
 
-class QdrantDB(VectorStore):
+class QdrantVectorStore(VectorStore):
     def __init__(
         self,
         collection_name: str,
@@ -38,6 +39,8 @@ class QdrantDB(VectorStore):
             api_key: Qdrant API密钥
         """
         self.client = QdrantClient(url=url, api_key=api_key)
+        logger.info(f"QdrantClient类型: {type(self.client)}")
+        logger.info(f"QdrantClient.search: {QdrantClient.search}")
         self._embeddings = embeddings
         self.collection_name = collection_name
         self.distance_type = distance_type  # 距离类型
@@ -93,9 +96,9 @@ class QdrantDB(VectorStore):
 
     def add_vectors(
         self,
-        collection_name: str,
         vectors: list[list[float]],
         metadatas: list[dict[str, Any]] | None = None,
+        ids: list[str] | None = None,
     ) -> list[str]:
         """
         将向量添加到集合中
@@ -107,17 +110,19 @@ class QdrantDB(VectorStore):
         Returns:
             list: 添加的向量ID列表
         """
+        if ids is None:
+            ids = [str(uuid.uuid4()) for _ in vectors]
 
         if metadatas is None:
             metadatas = [{} for _ in vectors]
 
         points = [
-            PointStruct(id=str(uuid.uuid4()), vector=vector, payload={**metadata})
-            for vector, metadata in zip(vectors, metadatas, strict=True)
+            PointStruct(id=id, vector=vector, payload={**metadata})
+            for id, vector, metadata in zip(ids, vectors, metadatas, strict=True)
         ]
 
-        self.client.upsert(collection_name=collection_name, points=points)
-        logger.info(f"向集合 {collection_name} 添加了 {len(vectors)} 条文本")
+        self.client.upsert(collection_name=self.collection_name, points=points)
+        logger.info(f"向集合 {self.collection_name} 添加了 {len(vectors)} 条文本")
 
         return [str(point.id) for point in points]
 
@@ -153,6 +158,15 @@ class QdrantDB(VectorStore):
             logger.error(f"从集合 {collection_name} 中删除向量失败", error=str(e))
             return False
 
+    def search(
+        self,
+        query: str,
+        search_type: Literal["similarity", "similarity_score_threshold", "mmr"],
+        score_threshold: float | None = None,
+        **kwargs: Any,
+    ) -> list[Document]:
+        return super().search(query, search_type, **kwargs)
+
     def similarity_search(self, query: str, k: int = 4, **kwargs: Any) -> list[Document]:
         """
         相似性搜索
@@ -173,7 +187,7 @@ class QdrantDB(VectorStore):
         # 准备搜索参数
         search_params = {
             "collection_name": self.collection_name,
-            "query_vector": query_vector,
+            "query": query_vector,
             "limit": k,
         }
 
@@ -187,7 +201,7 @@ class QdrantDB(VectorStore):
                 search_params[key] = value
 
         try:
-            search_result = self.client.search(**search_params)
+            search_result = self.client.query_points(**search_params).points
 
             documents = []
             for result in search_result:
@@ -232,7 +246,7 @@ class QdrantDB(VectorStore):
         # 准备搜索参数
         search_params = {
             "collection_name": self.collection_name,
-            "query_vector": query_vector,
+            "query": query_vector,
             "limit": k,
         }
 
@@ -246,7 +260,7 @@ class QdrantDB(VectorStore):
                 search_params[key] = value
 
         try:
-            search_result = self.client.search(**search_params)
+            search_result = self.client.query_points(**search_params).points
 
             results: list[tuple[Document, float]] = []
             for result in search_result:
@@ -364,9 +378,9 @@ class QdrantDB(VectorStore):
         """
         try:
             # 执行向量搜索，获取包含向量的结果
-            results = self.client.search(
+            results = self.client.query_points(
                 collection_name=self.collection_name,
-                query_vector=embedding,
+                query=embedding,
                 query_filter=filter,
                 search_params=search_params,
                 limit=fetch_k,
@@ -375,7 +389,7 @@ class QdrantDB(VectorStore):
                 score_threshold=score_threshold,
                 consistency=consistency,
                 **kwargs,
-            )
+            ).points
 
             # 如果没有找到结果，返回空列表
             if not results:
@@ -408,7 +422,8 @@ class QdrantDB(VectorStore):
 
             # 使用MMR算法选择多样化的结果
             selected_indices = maximal_marginal_relevance(
-                query_embedding=embedding,
+                # query_embedding=embedding,
+                query_embedding=np.array(embedding),
                 embedding_list=embeddings,
                 k=min(k, len(embeddings)),  # 确保k不超过可用文档数量
                 lambda_mult=lambda_mult,
@@ -432,46 +447,48 @@ class QdrantDB(VectorStore):
         self,
         metadatas: dict[str, Any],
         limit: int = 5,
-    ) -> list[ScoreDocumentDict]:
+    ) -> list[Document]:
         """
         通过元数据搜索
 
         Args:
-            collection_name: 集合名称
             metadatas: 元数据
             limit: 返回结果数量
 
         Returns:
             list[ScoreDocumentDict]: 搜索结果
         """
-        filter = Filter(
-            must=[FieldCondition(key=key, match=MatchValue(value=value)) for key, value in metadatas.items()]
-        )
+        try:
+            filter = Filter(
+                must=[FieldCondition(key=key, match=MatchValue(value=value)) for key, value in metadatas.items()]
+            )
 
-        search_result = self.client.query_points(
-            collection_name=self.collection_name,
-            query_filter=filter,
-            with_payload=True,
-            limit=limit,
-        ).points
+            # 使用scroll API进行纯过滤查询，而不是vector search
+            search_result = self.client.scroll(
+                collection_name=self.collection_name,
+                scroll_filter=filter,
+                limit=limit,
+                with_payload=True,
+            )[0]  # scroll返回(points, next_page_offset)元组，我们只需要points
 
-        results: list[ScoreDocumentDict] = []
-        for result in search_result:
-            metadata = result.payload.get(self.__metadata_key) or {}
-            metadata["_id"] = result.id
-            metadata["_collection_name"] = self.collection_name
-            results.append(
-                {
-                    "score": result.score,
-                    "doc": Document(
+            results: list[ScoreDocumentDict] = []
+            for result in search_result:
+                metadata = result.payload.get(self.__metadata_key) or {}
+                metadata["_id"] = result.id
+                metadata["_collection_name"] = self.collection_name
+                # scroll API不返回score，所以我们设置一个默认值
+                results.append(
+                    Document(
                         id=result.id,
                         page_content=result.payload.get(self.__content_page_key, ""),
                         metadata=metadata,
-                    ),
-                }
-            )
+                    )
+                )
 
-        return results
+            return results
+        except Exception as e:
+            logger.exception("通过元数据搜索时出错", exc_info=e)
+            return []
 
     def update_vector(
         self,
@@ -526,18 +543,36 @@ class QdrantDB(VectorStore):
             for point in result
         ]
 
+    def add_texts(
+        self, texts: Iterable[str], metadatas: list[dict] | None = None, *, ids: list[str] | None = None, **kwargs: Any
+    ) -> list[str]:
+        """
+        添加文本到集合中
+
+        Args:
+            texts: 文本列表
+            metadatas: 元数据列表
+        """
+        if ids is None:
+            ids = [str(uuid.uuid4()) for _ in texts]
+        return self.add_vectors(
+            vectors=self.embeddings.embed_documents(list(texts)),
+            metadatas=metadatas,
+            ids=ids,
+        )
+
     @classmethod
     def from_texts(
-        cls: type["QdrantDB"],
+        cls: type["QdrantVectorStore"],
         texts: list[str],
         embedding: Embeddings,
         metadatas: list[dict] | None = None,
         *,
         ids: list[str] | None = None,
         **kwargs: Any,
-    ) -> "QdrantDB":
+    ) -> "QdrantVectorStore":
         """
-        从文本创建QdrantDB实例
+        从文本创建QdrantVectorStore实例
 
         Args:
             texts: 文本列表
@@ -547,8 +582,9 @@ class QdrantDB(VectorStore):
             **kwargs: 其他参数，包括collection_name, url, api_key等
 
         Returns:
-            QdrantDB: QdrantDB实例
+            QdrantVectorStore: QdrantVectorStore
         """
+        logger.info(f"从文本创建QdrantVectorStore实例: {kwargs}")
         # 提取必要的参数
         collection_name = kwargs.get("collection_name")
         if not collection_name:
@@ -560,6 +596,7 @@ class QdrantDB(VectorStore):
 
         api_key = kwargs.get("api_key")
         distance_type = kwargs.get("distance_type", Distance.COSINE)
+        vector_size = kwargs.get("vector_size", len(embedding.embed_query("test")))
 
         # 创建QdrantDB实例
         qdrant_db = cls(
@@ -569,40 +606,16 @@ class QdrantDB(VectorStore):
             api_key=api_key,
             distance_type=distance_type,
             verily_distance=kwargs.get("verily_distance", True),
+            vector_size=vector_size,
+            create_collection_if_not_exists=kwargs.get("create_collection_if_not_exists", True),
         )
 
-        # 获取或创建集合
-        vector_size = len(embedding.embed_query("test"))
-        qdrant_db.create_collection(
-            collection_name=collection_name, vector_size=vector_size, force=kwargs.get("force", False)
-        )
+        # 处理元数据
+        if metadatas is None and texts:
+            metadatas = [{} for _ in texts]
 
-        # 生成嵌入并添加文档
+        # 添加文本
         if texts:
-            # 处理元数据
-            if metadatas is None:
-                metadatas = [{} for _ in texts]
-
-            # 生成嵌入
-            embeddings = embedding.embed_documents(texts)
-
-            # 准备points
-            points = []
-            for i, (text, metadata, vector) in enumerate(zip(texts, metadatas, embeddings, strict=True)):
-                # 生成ID
-                point_id = str(ids[i]) if ids and i < len(ids) else str(uuid.uuid4())
-
-                # 准备payload
-                payload = {
-                    qdrant_db.__content_page_key: text,
-                    qdrant_db.__metadata_key: metadata,
-                }
-
-                # 创建点
-                points.append(PointStruct(id=point_id, vector=vector, payload=payload))
-
-            # 添加到集合
-            qdrant_db.client.upsert(collection_name=collection_name, points=points)
-            logger.info(f"向集合 {collection_name} 添加了 {len(texts)} 条文本")
+            qdrant_db.add_texts(texts=texts, metadatas=metadatas, ids=ids)
 
         return qdrant_db

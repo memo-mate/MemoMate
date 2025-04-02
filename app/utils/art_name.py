@@ -5,6 +5,7 @@ def run_figlet_lolcat(text: str = "MemoMate", font: str = "larry3d") -> None:
     try:
         # 使用shell=True可以支持管道操作
         # 注意：在生产环境中，如果text和font来自用户输入，应该进行适当的验证以避免命令注入
+        print()
         cmd = f"figlet -f {font} {text} | lolcat"
         result = subprocess.run(cmd, shell=True, text=True, capture_output=False)
 
