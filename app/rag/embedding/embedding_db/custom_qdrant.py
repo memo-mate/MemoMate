@@ -126,19 +126,6 @@ class QdrantVectorStore(VectorStore):
 
         return [str(point.id) for point in points]
 
-    # def add_documents(self, documents: list[Document]) -> None:
-    #     """
-    #     将文档添加到集合中
-    #     """
-    #     vectors = [self.embeddings.embed_documents(document.page_content) for document in documents]
-    #     metadatas = [document.metadata for document in documents]
-    #     points = [
-    #         PointStruct(id=str(uuid.uuid4()), vector=vector, payload={**metadata})
-    #         for vector, metadata in zip(vectors, metadatas, strict=True)
-    #     ]
-    #     self.client.upsert(collection_name=self.collection_name, points=points)
-    #     logger.info(f"向集合 {self.collection_name} 添加了 {len(documents)} 条文本")
-
     def delete_vectors(self, collection_name: str, ids: list[int | str]) -> bool:
         """
         从集合中删除向量

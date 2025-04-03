@@ -19,7 +19,7 @@ dependencies = [
     "tavily-python>=0.5.1",
     "unstructured[md]>=0.16.23",
     "python-docx>=1.1.2",
-    "docx2txt>=0.9"
+    "docx2txt>=0.9",
     # web
     "fastapi[standard]<1.0.0,>=0.114.2",
     "python-multipart<1.0.0,>=0.0.7",
