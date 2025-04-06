@@ -50,16 +50,10 @@ class LLM:
     def __init__(self) -> None:
         pass
 
-    # mypy: disable-error-code="call-arg"
-    def generate(self, prompt: RAGLLMPrompt, params: LLMParams) -> RunnableSerializable[dict[Any, Any], BaseMessage]:
-        prompt_vars = prompt.prompt.input_variables
-        if "context" not in prompt_vars or "question" not in prompt_vars:
-            raise ValueError("Prompt must have context and question variables.")
-
-        llm: BaseChatModel | None = None
+    def _create_llm_instance(self, params: LLMParams) -> BaseChatModel:
         match params.api_type:
             case ModelAPIType.OPENAI:
-                llm = ChatOpenAI(
+                return ChatOpenAI(
                     model=params.model_name,
                     api_key=params.api_key,  # type: ignore[arg-type]
                     base_url=params.base_url,
@@ -71,7 +65,7 @@ class LLM:
                     stream_usage=params.stream_usage,
                 )
             case ModelAPIType.OLLAMA:
-                llm = ChatOllama(
+                return ChatOllama(
                     model=params.model_name,
                     base_url=params.base_url,
                     temperature=params.temperature,
@@ -81,10 +75,21 @@ class LLM:
                     streaming=params.streaming,
                     stream_usage=params.stream_usage,
                 )
-
             case _:
-                raise ValueError("Unsupported api type.")
+                raise ValueError(f"Unsupported api type: {params.api_type}")
+
+    # mypy: disable-error-code="call-arg"
+    def generate(self, prompt: RAGLLMPrompt, params: LLMParams) -> RunnableSerializable[dict[Any, Any], BaseMessage]:
+        prompt_vars = prompt.prompt.input_variables
+        if "context" not in prompt_vars or "question" not in prompt_vars:
+            raise ValueError("Prompt must have context and question variables.")
+
+        llm = self._create_llm_instance(params)
 
         chain = prompt.prompt | llm
         # chain.invoke(prompt, config=config)
         return chain
+
+    def get_llm(self, params: LLMParams) -> BaseChatModel:
+        """获取原始的LLM对象，适用于需要直接使用LLM的场景"""
+        return self._create_llm_instance(params)

@@ -1,6 +1,6 @@
 import re
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from docx import Document
 from langchain_core.documents import Document as LangchainDocument
@@ -24,13 +24,11 @@ class WordParser:
     def __init__(self, config: ParserConfig = None):
         self.config = config or ParserConfig()
 
-    def __call__(
-        self, file_path: str | Path, *args: Any, **kwargs: Any
-    ) -> List[LangchainDocument]:
+    def __call__(self, file_path: str | Path, *args: Any, **kwargs: Any) -> list[LangchainDocument]:
         """处理文档并返回分块后的文档列表"""
         return self.chunk(file_path)
 
-    def chunk(self, file_path: str | Path) -> List[LangchainDocument]:
+    def chunk(self, file_path: str | Path) -> list[LangchainDocument]:
         """将文档分割成多个块"""
         file_path = Path(file_path) if not isinstance(file_path, Path) else file_path
 
@@ -46,7 +44,7 @@ class WordParser:
         except Exception as e:
             raise ValueError(f"无法解析Word文件: {str(e)}")
 
-    def _basic_split(self, file_path: Path) -> List[LangchainDocument]:
+    def _basic_split(self, file_path: Path) -> list[LangchainDocument]:
         """基本的文档分块"""
         doc = Document(file_path)
 
@@ -75,7 +73,7 @@ class WordParser:
         logger.info("基本分块完成", file_path=str(file_path), chunk_count=len(chunks))
         return chunks
 
-    def _structure_split(self, file_path: Path) -> List[LangchainDocument]:
+    def _structure_split(self, file_path: Path) -> list[LangchainDocument]:
         """根据文档结构进行分块"""
 
         doc = Document(file_path)
@@ -104,9 +102,7 @@ class WordParser:
                 section_text = f"# {section.title}\n\n{section.content}"
 
                 if len(section_text) <= settings.CHUNK_SIZE * 1.2:
-                    documents.append(
-                        LangchainDocument(page_content=section_text, metadata=metadata)
-                    )
+                    documents.append(LangchainDocument(page_content=section_text, metadata=metadata))
                 else:
                     try:
                         text_splitter = RecursiveCharacterTextSplitter(
@@ -126,17 +122,11 @@ class WordParser:
                                 "",
                             ],
                         )
-                        sub_chunks = text_splitter.create_documents(
-                            [section_text], [metadata]
-                        )
+                        sub_chunks = text_splitter.create_documents([section_text], [metadata])
 
-                        if sub_chunks and not sub_chunks[0].page_content.startswith(
-                            f"# {section.title}"
-                        ):
+                        if sub_chunks and not sub_chunks[0].page_content.startswith(f"# {section.title}"):
                             title_text = f"# {section.title}\n\n"
-                            sub_chunks[0].page_content = (
-                                title_text + sub_chunks[0].page_content
-                            )
+                            sub_chunks[0].page_content = title_text + sub_chunks[0].page_content
 
                         for chunk in sub_chunks:
                             chunk.metadata["title"] = section.title
@@ -149,30 +139,20 @@ class WordParser:
                             section_title=section.title,
                             error=str(e),
                         )
-                        documents.append(
-                            LangchainDocument(
-                                page_content=section_text, metadata=metadata
-                            )
-                        )
+                        documents.append(LangchainDocument(page_content=section_text, metadata=metadata))
 
         if not documents:
-            logger.warning(
-                "未生成任何结构化文档块，回退到基本分块", file_path=str(file_path)
-            )
+            logger.warning("未生成任何结构化文档块，回退到基本分块", file_path=str(file_path))
             return self._basic_split(file_path)
 
         for i, doc in enumerate(documents):
             doc.metadata["chunk_index"] = i
             doc.metadata["chunk_count"] = len(documents)
 
-        logger.info(
-            "结构化分块完成", file_path=str(file_path), chunk_count=len(documents)
-        )
+        logger.info("结构化分块完成", file_path=str(file_path), chunk_count=len(documents))
         return documents
 
-    def _extract_text_and_metadata(
-        self, doc, file_path: Path
-    ) -> Tuple[str, Dict[str, Any]]:
+    def _extract_text_and_metadata(self, doc, file_path: Path) -> tuple[str, dict[str, Any]]:
         """提取Word文本内容和元数据"""
         metadata = {
             "source": str(file_path),
@@ -212,7 +192,7 @@ class WordParser:
 
         return full_text, metadata
 
-    def _analyze_document_structure(self, doc) -> List[DocumentSection]:
+    def _analyze_document_structure(self, doc) -> list[DocumentSection]:
         """分析文档结构以识别标题和章节"""
         sections = []
         heading_styles = self._identify_heading_styles(doc)
@@ -244,9 +224,7 @@ class WordParser:
                 {
                     "text": para.text,
                     "content_type": content_type,
-                    "title_level": title_level
-                    if content_type == DocumentContentType.TITLE.value
-                    else 0,
+                    "title_level": title_level if content_type == DocumentContentType.TITLE.value else 0,
                 }
             )
 
@@ -272,9 +250,7 @@ class WordParser:
 
         elements = paragraphs + tables
         elements.sort(
-            key=lambda x: x.get("table_index", 0)
-            if x["content_type"] == DocumentContentType.TABLE.value
-            else 0
+            key=lambda x: x.get("table_index", 0) if x["content_type"] == DocumentContentType.TABLE.value else 0
         )
 
         for i, element in enumerate(elements):
@@ -316,7 +292,7 @@ class WordParser:
 
         return sections
 
-    def _identify_heading_styles(self, doc) -> Dict[str, int]:
+    def _identify_heading_styles(self, doc) -> dict[str, int]:
         """识别文档中使用的标题样式"""
         heading_styles = {}
 
@@ -342,11 +318,7 @@ class WordParser:
                 match = re.search(pattern, style_name)
                 if match:
                     try:
-                        level = (
-                            level_func(match.group(1))
-                            if match.groups()
-                            else level_func(None)
-                        )
+                        level = level_func(match.group(1)) if match.groups() else level_func(None)
                         heading_styles[style_name] = level
                         break
                     except (IndexError, ValueError):
@@ -354,7 +326,7 @@ class WordParser:
 
         return heading_styles
 
-    def _parse_title_format(self, text: str) -> Optional[Tuple[str, str, int]]:
+    def _parse_title_format(self, text: str) -> tuple[str, str, int] | None:
         """解析标题格式，返回(编号, 标题文本, 层级)或None"""
         for pattern, level in TITLE_PATTERNS:
             match = re.match(pattern, text)
@@ -362,9 +334,7 @@ class WordParser:
                 number = match.group(1)
                 title_text = match.group(2).strip()
 
-                if len(title_text.split()) > 20 or any(
-                    p in title_text for p in ["。", "；", ";", "."]
-                ):
+                if len(title_text.split()) > 20 or any(p in title_text for p in ["。", "；", ";", "."]):
                     continue
 
                 if re.search(r"[一二三四五六七八九十百]", number):
@@ -404,9 +374,7 @@ class WordParser:
 
                 return number, title_text, level
 
-        if len(text) < 40 and not text.endswith(
-            ("。", "，", "；", "：", ".", ",", ";", ":")
-        ):
+        if len(text) < 40 and not text.endswith(("。", "，", "；", "：", ".", ",", ";", ":")):
             if text in COMMON_TITLE_KEYWORDS:
                 return "", text, 1
 
