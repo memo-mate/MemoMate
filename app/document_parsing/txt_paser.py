@@ -32,7 +32,7 @@ class TxtParser:
                 raise FileNotFoundError(f"文件不存在: {self.file_path}")
 
             # 读取文件内容
-            with open(self.file_path, "r", encoding="utf-8") as f:
+            with open(self.file_path, encoding="utf-8") as f:
                 text = f.read()
 
             # 创建基础元数据
@@ -80,13 +80,13 @@ class TxtParser:
             encodings = ["gbk", "gb2312", "big5", "latin1"]
             for encoding in encodings:
                 try:
-                    with open(self.file_path, "r", encoding=encoding) as f:
+                    with open(self.file_path, encoding=encoding) as f:
                         text = f.read()
                     logger.info(f"使用 {encoding} 编码成功读取文件", file_path=self.file_path)
                     return self.parse()  # 递归调用以处理成功读取的内容
                 except UnicodeDecodeError:
                     continue
-            
+
             # 如果所有编码都失败
             logger.error("无法解码文件内容", file_path=self.file_path)
             raise
