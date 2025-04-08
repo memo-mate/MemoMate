@@ -6,7 +6,7 @@ from langchain_core.runnables import Runnable, RunnableWithMessageHistory
 from sqlmodel import Session
 
 from app.core.db import engine
-from app.crud.history_message import get_history_messages
+from app.crud.history_message import add_history_message, get_history_messages
 from app.enums import HistoryMessageType
 
 
@@ -71,3 +71,34 @@ class MemoMateMemory:
                 elif msg.message_type == HistoryMessageType.AI:
                     base_messages.append(AIMessage(content=msg.message))
             return ChatMessageHistory(messages=base_messages)
+
+    @staticmethod
+    def merge_history(session_id: str, client_history: list[tuple[str, str]]) -> None:
+        """
+        合并客户端历史和数据库历史
+        只添加数据库中缺失的对话
+
+        session_id: 会话ID
+        client_history: 客户端历史记录，格式为[(用户问题1, AI回答1), ...]
+        """
+        with Session(engine) as session:
+            # 获取数据库中现有历史
+            db_messages = get_history_messages(session=session, session_id=session_id)
+
+            # 计算数据库中有多少对完整对话 (每对包含一个人类消息和一个AI消息)
+            db_pairs_count = len(db_messages) // 2
+
+            # 比较客户端历史长度
+            client_pairs_count = len(client_history)
+
+            # 如果客户端历史更长，只添加新增部分
+            if client_pairs_count > db_pairs_count:
+                for i in range(db_pairs_count, client_pairs_count):
+                    human_msg, ai_msg = client_history[i]
+                    add_history_message(
+                        session=session, message=human_msg, message_type=HistoryMessageType.HUMAN, session_id=session_id
+                    )
+
+                    add_history_message(
+                        session=session, message=ai_msg, message_type=HistoryMessageType.AI, session_id=session_id
+                    )

@@ -13,6 +13,7 @@ class ChatResponse(SQLModel):
 
     message: str = Field(default=..., description="聊天消息")
     history: list[tuple[str, str]] = Field(default_factory=list, description="聊天历史")
+    session_id: str = Field(default=None, description="会话ID")
 
 
 class RAGChatRequest(SQLModel):

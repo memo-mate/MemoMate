@@ -150,6 +150,7 @@ class Settings(BaseSettings):
     # Qrant 配置
     QDRANT_URL: str = "http://localhost:6333"
     QDRANT_API_KEY: str | None = None
+    QDRANT_COLLECTION: str = "memomate_dev"
 
     # 重排序模块配置
     RERANKER_MODEL: str = "BAAI/bge-reranker-v2-m3"

@@ -44,6 +44,7 @@ class MemoMateEmbeddings:
             model=model_name,
             api_key=api_key,
             base_url=base_url,
-            # model_kwargs={"normalize_embeddings": normalize},
+            # encode_kwargs={"normalize_embeddings": normalize},
+            dimensions=1024,
         )
         return embedding_model

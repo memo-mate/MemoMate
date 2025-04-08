@@ -4,8 +4,12 @@ from typing import Literal
 from fastapi import APIRouter
 from langchain_core.runnables import RunnableConfig
 from pydantic import BaseModel, Field
+from sqlmodel import Session
 
 from app.core import logger, settings
+from app.core.db import engine
+from app.crud.history_message import add_history_message
+from app.enums import HistoryMessageType
 from app.rag.llm.completions import LLM, LLMParams, ModelAPIType, RAGLLMPrompt
 from app.rag.llm.document_chain import RAGDocumentChain
 from app.rag.llm.history import MemoMateMemory
@@ -27,17 +31,23 @@ class RAGWebSocketChatMessage(BaseModel):
 
 # 创建检索器实例
 retriever = BaseRetriever()
+# 创建检索器和文档链实例
+history_retriever = HistoryAwareRetriever(base_retriever=retriever)
+document_chain = RAGDocumentChain()
 
 
 @router.post("/chat", response_model=ChatResponse, description="RAG对话接口")
 async def rag_chat(params: RAGChatRequest):
     """RAG对话接口"""
+    session_id = params.session_id or str(uuid.uuid4())
+    if params.session_id and params.history:
+        MemoMateMemory.merge_history(session_id, params.history)
+
     # 获取上下文
     context = retriever.get_context(params.message, top_k=params.retrieve_top_k)
 
     # 创建提示
     prompt = RAGLLMPrompt(
-        # prompt=ChatPromptTemplate.from_template("""{question}{context}"""),
         context=context,
         question=params.message,
     )
@@ -59,22 +69,28 @@ async def rag_chat(params: RAGChatRequest):
         memory_chain = MemoMateMemory.gen_memory_chain(llm_chain)
         response = memory_chain.invoke(
             {"context": context, "question": params.message},
-            config=RunnableConfig(callbacks=[], session_id=str(uuid.uuid4())),
+            config=RunnableConfig(callbacks=[], session_id=session_id),
         )
     else:
         response = llm_chain.invoke(prompt.model_dump(), RunnableConfig(callbacks=[]))
 
-    logger.info("RAG响应", content=response.content, context_length=len(context))
+    # 保存用户问题和AI回答到数据库
+    with Session(engine) as db_session:
+        add_history_message(
+            session=db_session, message=params.message, message_type=HistoryMessageType.HUMAN, session_id=session_id
+        )
 
-    return ChatResponse(message=response.content, history=params.history)
+        add_history_message(
+            session=db_session, message=response.content, message_type=HistoryMessageType.AI, session_id=session_id
+        )
+    new_history = list(params.history)
+    new_history.append((params.message, response.content))
+    logger.info("RAG响应", content=response.content, context_length=len(context), session_id=session_id)
+
+    return ChatResponse(message=response.content, history=new_history, session_id=session_id)
 
 
-# 创建检索器和文档链实例
-history_retriever = HistoryAwareRetriever(base_retriever=retriever)
-document_chain = RAGDocumentChain()
-
-
-@router.post("/chat/history-aware", response_model=ChatResponse, description="基于历史感知的RAG对话接口")
+@router.post("/chat/history_aware", response_model=ChatResponse, description="基于历史感知的RAG对话接口")
 async def history_aware_rag_chat(params: RAGChatRequest):
     """使用历史感知检索技术的RAG对话接口
 
@@ -95,7 +111,11 @@ async def history_aware_rag_chat(params: RAGChatRequest):
 
     session_id = params.session_id or str(uuid.uuid4())
 
-    # 可以选择限制历史长度
+    # 如果有会话ID和历史记录，确保数据库与客户端历史同步
+    if params.session_id and params.history:
+        MemoMateMemory.merge_history(session_id, params.history)
+
+    # 选择限制历史长度
     chat_history = params.history[-10:] if len(params.history) > 10 else params.history
 
     # 使用历史感知检索获取文档
@@ -106,7 +126,19 @@ async def history_aware_rag_chat(params: RAGChatRequest):
     # 使用文档链生成回答
     response = document_chain.run(question=params.message, documents=documents, chat_history=chat_history)
 
-    logger.info("高级RAG响应", session_id=session_id, document_count=len(documents))
+    # 保存用户问题和AI回答到数据库
+    with Session(engine) as db_session:
+        # 保存用户问题
+        add_history_message(
+            session=db_session, message=params.message, message_type=HistoryMessageType.HUMAN, session_id=session_id
+        )
+
+        # 保存AI回答
+        add_history_message(
+            session=db_session, message=response, message_type=HistoryMessageType.AI, session_id=session_id
+        )
+
+    logger.info("历史感知检索技术的RAG响应", session_id=session_id, document_count=len(documents))
 
     # 更新历史
     new_history = list(params.history)
@@ -114,4 +146,4 @@ async def history_aware_rag_chat(params: RAGChatRequest):
     if len(new_history) > 20:  # 限制返回历史长度
         new_history = new_history[-20:]
 
-    return ChatResponse(message=response, history=new_history)
+    return ChatResponse(message=response, history=new_history, session_id=session_id)
