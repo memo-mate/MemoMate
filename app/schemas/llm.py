@@ -22,5 +22,4 @@ class RAGChatRequest(SQLModel):
     message: str = Field(default=..., description="聊天消息")
     history: list[tuple[str, str]] = Field(default_factory=list, description="聊天历史")
     retrieve_top_k: int = Field(default=5, description="检索文档数量")
-    use_history: bool = Field(default=True, description="是否使用历史记录")
     session_id: str | None = Field(default=None, description="会话ID")

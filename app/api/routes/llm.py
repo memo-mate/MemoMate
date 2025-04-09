@@ -28,9 +28,9 @@ async def chat(params: ChatRequest) -> Any:
     """对话接口"""
     # 创建提示
     prompt = RAGLLMPrompt(
-        prompt=ChatPromptTemplate.from_template("""{question}{context}"""),
+        prompt=ChatPromptTemplate.from_template("""{input}{context}"""),
         context="",
-        question=params.message,
+        input=params.message,
     )
 
     # 创建参数
@@ -61,9 +61,9 @@ async def chat_sse(
 
     # 创建提示
     prompt = RAGLLMPrompt(
-        prompt=ChatPromptTemplate.from_template("""{question}{context}"""),
+        prompt=ChatPromptTemplate.from_template("""{input}{context}"""),
         context="",
-        question=params.message,
+        input=params.message,
     )
 
     # 创建参数
@@ -171,9 +171,9 @@ async def chat_ws(websocket: WebSocket) -> Any:
                             )
 
                             prompt = RAGLLMPrompt(
-                                prompt=ChatPromptTemplate.from_template("""{question}{context}"""),
+                                prompt=ChatPromptTemplate.from_template("""{input}{context}"""),
                                 context="",
-                                question=message,
+                                input=message,
                             )
                             # 获取生成链
                             chain = llm_instance.generate(prompt, llm_params)

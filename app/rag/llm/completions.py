@@ -21,7 +21,7 @@ RESULT_PROMPT = ChatPromptTemplate.from_template(
     """回答以下问题，基于提供的上下文信息。如果无法从上下文中找到答案，请说"我不知道"。
 
 上下文: {context}
-问题: {question}
+问题: {input}
 
 回答:"""
 )
@@ -43,7 +43,7 @@ class LLMParams(BaseModel):
 class RAGLLMPrompt(BaseModel):
     prompt: ChatPromptTemplate = RESULT_PROMPT
     context: str
-    question: str
+    input: str
 
 
 class LLM:
@@ -81,8 +81,8 @@ class LLM:
     # mypy: disable-error-code="call-arg"
     def generate(self, prompt: RAGLLMPrompt, params: LLMParams) -> RunnableSerializable[dict[Any, Any], BaseMessage]:
         prompt_vars = prompt.prompt.input_variables
-        if "context" not in prompt_vars or "question" not in prompt_vars:
-            raise ValueError("Prompt must have context and question variables.")
+        if "context" not in prompt_vars or "input" not in prompt_vars:
+            raise ValueError("Prompt must have context and input variables.")
 
         llm = self._create_llm_instance(params)
 

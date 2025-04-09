@@ -1,7 +1,9 @@
 import uuid
 
 from pydantic import EmailStr
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, Relationship, SQLModel
+
+from app.models.history_message import HistoryMessage
 
 
 # Shared properties
@@ -38,6 +40,7 @@ class UpdatePassword(SQLModel):
 class User(UserBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     hashed_password: str
+    history_messages: list["HistoryMessage"] = Relationship(back_populates="user")
 
 
 # Properties to return via API, id is always required

@@ -49,8 +49,9 @@ class MemoMateMemory:
         conversational_rag_chain = RunnableWithMessageHistory(
             rag_chain,
             MemoMateMemory.get_session_history,
-            input_messages_key="question",
+            input_messages_key="input",  # 跟LangChainAPI设计约束保持一直
             history_messages_key="chat_history",
+            output_messages_key="output",
         )
         return conversational_rag_chain
 

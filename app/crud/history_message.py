@@ -1,14 +1,18 @@
+import uuid
+
 from sqlmodel import Session, delete, select
 
 from app.enums import HistoryMessageType
 from app.models.history_message import HistoryMessage
 
 
-def add_history_message(*, session: Session, message: str, message_type: HistoryMessageType, session_id: str) -> None:
+def add_history_message(
+    *, session: Session, message: str, message_type: HistoryMessageType, session_id: str, user_id: uuid.UUID
+) -> None:
     """
     添加历史消息
     """
-    history_message = HistoryMessage(message=message, message_type=message_type, session_id=session_id)
+    history_message = HistoryMessage(message=message, message_type=message_type, session_id=session_id, user_id=user_id)
     session.add(history_message)
     session.commit()
 
