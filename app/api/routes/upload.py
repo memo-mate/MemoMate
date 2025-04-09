@@ -8,9 +8,11 @@ from sqlmodel import select
 
 from app.api.deps import SessionDep
 from app.core.config import settings
+from app.core.log_adapter import logger
 from app.enums.upload import FileUploadState
 from app.models.upload import FileMatedata, UploadChunk
 from app.schemas.upload import (
+    DeleteUploadResponse,
     MergeChunksRequest,
     MergeChunksResponse,
     UploadChunkResponse,
@@ -180,7 +182,6 @@ def merge_chunks(
             message=f"分块未完全上传，缺少分块: {missing_chunks}",
             upload_id=request.upload_id,
             status=upload_task.status.name,
-            error="INCOMPLETE_CHUNKS",
         )
 
     # 合并分块文件
@@ -224,9 +225,39 @@ def merge_chunks(
         session.commit()
 
         return MergeChunksResponse(
-            success=False,
-            message=f"合并失败: {str(e)}",
-            upload_id=request.upload_id,
-            status=upload_task.status.name,
-            error="MERGE_FAILED",
+            success=False, message=f"合并失败: {str(e)}", upload_id=request.upload_id, status=upload_task.status.name
         )
+
+
+@router.delete(
+    "/{upload_id}",
+    response_model=DeleteUploadResponse,
+    summary="取消文件上传",
+    description="取消文件上传任务，删除已上传的分块和临时文件",
+)
+def cancel_upload(
+    upload_id: str,
+    session: SessionDep,
+) -> DeleteUploadResponse:
+    statement = select(FileMatedata).where(FileMatedata.upload_id == upload_id)
+    upload_task = session.exec(statement).first()
+    if not upload_task:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"找不到上传任务: {upload_id}")
+
+    if upload_task.status == FileUploadState.success:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="文件已合并完成，无法取消上传",
+        )
+
+    chunk_folder = Path(f"{settings.UPLOAD_DIR}/temp/{upload_id}")
+    if chunk_folder.exists():
+        try:
+            shutil.rmtree(chunk_folder)
+        except Exception as e:
+            logger.warning(f"删除临时文件失败: {str(e)}")
+
+    session.delete(upload_task)
+    session.commit()
+
+    return DeleteUploadResponse(success=True, message="上传任务已取消", upload_id=upload_id)

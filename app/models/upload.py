@@ -25,7 +25,9 @@ class FileMatedata(SQLModel, table=True):
         default_factory=datetime.datetime.now, description="任务创建时间（默认now()）"
     )
     updated_at: datetime.datetime = Field(default_factory=datetime.datetime.now, description="最后更新时间（自动更新）")
-    chunks: list["UploadChunk"] = Relationship(back_populates="upload_file")
+    chunks: list["UploadChunk"] = Relationship(
+        back_populates="upload_file", sa_relationship_kwargs={"cascade": "all, delete-orphan"}
+    )
 
     def __repr__(self) -> str:
         return f"Upload(upload_id={self.upload_id}, file_name={self.file_name}, status={self.status}, uploader_id={self.uploader_id})"

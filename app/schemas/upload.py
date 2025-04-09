@@ -77,4 +77,11 @@ class MergeChunksResponse(BaseModel):
     upload_id: str = Field(..., description="上传任务ID")
     status: str = Field(..., description="文件状态")
     file_path: str | None = Field(None, description="合并后的文件路径")
-    error: str | None = Field(None, description="错误信息(如果有)")
+
+
+class DeleteUploadResponse(BaseModel):
+    """取消上传响应数据"""
+
+    success: bool = Field(..., description="取消上传是否成功")
+    message: str = Field(..., description="操作结果信息")
+    upload_id: str = Field(..., description="上传任务ID")
