@@ -79,7 +79,7 @@ class ToolLibrary:
         instances_by_class = (
             {instance.__class__.__name__: instance for instance in instance_imports} if instance_imports else {}
         )
-        functions_by_file = {k: v for k, v in file_imports} if file_imports else {}
+        functions_by_file = dict(file_imports) if file_imports else {}
 
         for metadata in stored_tools["metadatas"]:
             instance = None

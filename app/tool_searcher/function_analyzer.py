@@ -23,7 +23,8 @@ class FunctionAnalyzer:
         descriptions = [e.strip() for e in function_.__doc__.split(":param ")]
         function_description, parameter_descriptions = descriptions[0], descriptions[1:]
         parameter_descriptions = {
-            k: v for (k, v) in [e.split(":return:")[0].strip().split(": ", 1) for e in parameter_descriptions if e]
+            k.strip(): v.strip()
+            for (k, v) in [e.split(":return:")[0].strip().split(": ", 1) for e in parameter_descriptions if e]
         }
         for parameter, parameter_description in parameter_descriptions.items():
             parameters["properties"][parameter]["description"] = parameter_description

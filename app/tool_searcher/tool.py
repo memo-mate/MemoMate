@@ -173,7 +173,7 @@ class Tool:
 
         # 处理泛型类型
         origin = annotation.__origin__
-        if origin == tuple:
+        if isinstance(origin, tuple):
             # 特殊处理tuple类型
             args = [self._get_type_name(arg) for arg in annotation.__args__]
             item_schemas = [self._get_return_type_info(arg) for arg in annotation.__args__]
@@ -187,7 +187,7 @@ class Tool:
                     "description": f"返回值类型: tuple[{', '.join(args)}]",
                     "prefixItems": item_schemas,
                 }
-        elif origin in (list, set, frozenset):
+        elif isinstance(origin, list | set | frozenset):
             # 处理list, set, frozenset类型
             if annotation.__args__:
                 item_type = self._get_type_name(annotation.__args__[0])
@@ -200,7 +200,7 @@ class Tool:
                 }
             else:
                 return {"type": "array", "description": f"返回值类型: {origin.__name__}"}
-        elif origin == dict:
+        elif isinstance(origin, dict):
             # 处理dict类型
             if len(annotation.__args__) >= 2:
                 key_type = self._get_type_name(annotation.__args__[0])
