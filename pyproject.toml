@@ -46,6 +46,7 @@ dependencies = [
     "websockets>=15.0.1",
     "faster-whisper>=1.1.1",
     "kafka-python>=2.1.2",
+    "chromadb>=1.0.8",
 ]
 
 [dependency-groups]
