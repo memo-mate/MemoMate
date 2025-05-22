@@ -20,8 +20,12 @@ class FunctionAnalyzer:
             parameters["required"] = [p for p in parameters["required"] if p != "self"]
 
         # analyze doc string
-        descriptions = [e.strip() for e in function_.__doc__.split(":param ")]
-        function_description, parameter_descriptions = descriptions[0], descriptions[1:]
+        if function_.__doc__:
+            descriptions = [e.strip() for e in function_.__doc__.split(":param ")]
+            function_description, parameter_descriptions = descriptions[0], descriptions[1:]
+        else:
+            function_description = ""
+            parameter_descriptions = {}
         parameter_descriptions = {
             k.strip(): v.strip()
             for (k, v) in [e.split(":return:")[0].strip().split(": ", 1) for e in parameter_descriptions if e]
