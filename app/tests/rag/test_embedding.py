@@ -1,4 +1,3 @@
-import pytest
 from langchain_core.documents import Document
 from langchain_core.embeddings import Embeddings
 
@@ -12,13 +11,11 @@ from app.rag.embedding.embeeding_model import MemoMateEmbeddings
 # docker run -d --name qdrant-server -p 6333:6333 -e QDRANT__API__HTTP_ENABLED=true -e QDRANT__API__HTTP_API_KEY=memo.fastapi qdrant/qdrant
 
 
-@pytest.fixture
-def VS():
+def get_qdrant_vector_store() -> QdrantVectorStore:
     return QdrantVectorStore(
         collection_name="test",
         embeddings=MemoMateEmbeddings.local_embedding(driver=EmbeddingDriverEnum.MAC),
-        url=settings.QDRANT_URL,
-        api_key=settings.QDRANT_API_KEY,
+        path=settings.QDRANT_PATH,
     )
 
 
@@ -36,18 +33,21 @@ def test_openai_embedding():
     assert len(embedding[0]) == 1024
 
 
-def test_qdrant_instance(VS: QdrantVectorStore):
+def test_qdrant_instance():
+    VS = get_qdrant_vector_store()
     logger.info(f"QdrantDB 客户端: {VS.client}")
     assert VS.client is not None, "QdrantDB 客户端未初始化"
 
 
-def test_qdrant_list_collections(VS: QdrantVectorStore):
+def test_qdrant_list_collections():
+    VS = get_qdrant_vector_store()
     collections = VS.list_collections()
     logger.info(f"集合列表: {collections}")
     assert len(collections) > 0, "集合列表为空"
 
 
-def test_qdrant_add_documents(VS: QdrantVectorStore):
+def test_qdrant_add_documents():
+    VS = get_qdrant_vector_store()
     texts = [
         "人工智能是计算机科学的一个分支，致力于开发能够模拟人类智能的系统。",
         "机器学习是人工智能的一个子领域，专注于让计算机系统从数据中学习。",
@@ -64,17 +64,20 @@ def test_qdrant_add_documents(VS: QdrantVectorStore):
     logger.info("添加文档: 完成")
 
 
-def test_qdrant_vertor_store_search(VS: QdrantVectorStore):
+def test_qdrant_vertor_store_search():
+    VS = get_qdrant_vector_store()
     results = VS.search(query="什么是机器学习？", search_type="similarity_score_threshold", score_threshold=0.5)
     logger.info(f"搜索结果: {results}")
 
 
-def test_qdrant_vertor_store_search_by_metadata(VS: QdrantVectorStore):
+def test_qdrant_vertor_store_search_by_metadata():
+    VS = get_qdrant_vector_store()
     results = VS.search_by_metadata(metadatas={"source": "AI介绍", "author": "示例作者"})
     logger.info(f"通过元数据搜索结果: {results}")
 
 
-def test_qdrant_vertor_store_update_vector(VS: QdrantVectorStore):
+def test_qdrant_vertor_store_update_vector():
+    VS = get_qdrant_vector_store()
     results = VS.search_by_metadata(metadatas={"source": "AI介绍", "author": "示例作者"})
     VS.update_vector(
         collection_name="test",
@@ -89,12 +92,14 @@ def test_qdrant_vertor_store_update_vector(VS: QdrantVectorStore):
     logger.info("更新向量: 完成")
 
 
-def test_qdrant_vertor_store_delete_collection(VS: QdrantVectorStore):
+def test_qdrant_vertor_store_delete_collection():
+    VS = get_qdrant_vector_store()
     VS.delete_collection(collection_name="test")
     logger.info("删除集合: test")
 
 
-def test_qdrant_vertor_store_as_retriever(VS: QdrantVectorStore):
+def test_qdrant_vertor_store_as_retriever():
+    VS = get_qdrant_vector_store()
     retriever = VS.as_retriever()
     logger.info(f"检索器: {retriever}")
     results = retriever.get_relevant_documents(query="什么是机器学习？")

@@ -1,6 +1,5 @@
 import importlib
 import json
-import logging
 import sys
 from collections import Counter
 from collections.abc import Callable
@@ -10,12 +9,11 @@ from pathlib import Path
 
 import chromadb
 from langchain_core.embeddings import Embeddings
-from tool_searcher.function_analyzer import FunctionAnalyzer
-from tool_searcher.tool import Tool
 
+from app.core.log_adapter import logger
 from app.rag.embedding.embeeding_model import MemoMateEmbeddings
-
-logger = logging.getLogger(__name__)
+from app.tool_searcher.function_analyzer import FunctionAnalyzer
+from app.tool_searcher.tool import Tool
 
 
 # TODO: (Author: Daoji 2025-05-12 21:38:17) 需要添加 MCP 动态加载工具嵌入功能

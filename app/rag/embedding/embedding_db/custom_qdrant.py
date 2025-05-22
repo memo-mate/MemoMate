@@ -23,8 +23,9 @@ class QdrantVectorStore(VectorStore):
         self,
         collection_name: str,
         embeddings: Embeddings,
-        url: str,
+        url: str | None = None,
         api_key: str | None = None,
+        path: str | None = None,
         distance_type: Distance = Distance.COSINE,
         verily_distance: bool = True,
         vector_size: int = 1024,
@@ -33,12 +34,23 @@ class QdrantVectorStore(VectorStore):
         """
         初始化Qdrant客户端
 
+
         Args:
             embeddings: 嵌入模型
-            url: Qdrant服务器URL
+            url: Qdrant服务器URL，如果为None，则使用path
             api_key: Qdrant API密钥
+            path: Qdrant数据库路径，如果为None，则使用url
+            distance_type: 距离类型
+            verily_distance: 是否使用距离类型
+            vector_size: 向量大小
+            create_collection_if_not_exists: 是否创建集合
         """
-        self.client = QdrantClient(url=url, api_key=api_key)
+        if url:
+            self.client = QdrantClient(url=url, api_key=api_key)
+        elif path:
+            self.client = QdrantClient(path=path)
+        else:
+            raise ValueError("url and path can't be None at the same time.")
         logger.info(f"QdrantClient类型: {type(self.client)}")
         logger.info(f"QdrantClient.search: {QdrantClient.search}")
         self._embeddings = embeddings

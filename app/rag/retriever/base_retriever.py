@@ -13,8 +13,9 @@ class BaseRetriever:
         self,
         collection_name: str = settings.QDRANT_COLLECTION,
         embedding_model=None,
-        url: str = settings.QDRANT_URL,
-        api_key: str = settings.QDRANT_API_KEY,
+        vector_store_url: str | None = None,
+        vector_store_api_key: str | None = None,
+        vector_store_path: str | None = settings.QDRANT_PATH,
     ):
         # 初始化嵌入模型
         self.embeddings = embedding_model or MemoMateEmbeddings.openai_embedding(
@@ -22,7 +23,11 @@ class BaseRetriever:
         )
         # 初始化向量存储
         self.vector_store = QdrantVectorStore(
-            collection_name=collection_name, embeddings=self.embeddings, url=url, api_key=api_key
+            collection_name=collection_name,
+            embeddings=self.embeddings,
+            url=vector_store_url,
+            api_key=vector_store_api_key,
+            path=vector_store_path,
         )
 
     def retrieve(self, query: str, top_k: int = 5) -> list[Document]:

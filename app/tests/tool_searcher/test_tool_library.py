@@ -2,7 +2,7 @@ import asyncio
 import logging
 import math
 
-from tool_searcher.tool_library import ToolLibrary
+from app.tool_searcher.tool_library import ToolLibrary
 
 
 class TrigonometryCalculator:
