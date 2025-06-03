@@ -70,11 +70,12 @@ async def main() -> None:
 
     trigonometry_calculator = TrigonometryCalculator()
     tulip = ToolLibrary(
-        chroma_base_dir="tool_db",
+        # chroma_base_dir="tool_db",
         # file_imports=[    # 从模块导入tools 函数
         #     ("tools.calendar", []),
         #     ("logics.copilot.tools.stock_tool", []),
         # ],
+        chroma_sub_dir="tools",
         instance_imports=[trigonometry_calculator],  # 从类导入tools
     )
 
