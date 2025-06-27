@@ -6,8 +6,6 @@
     // "streetsidesoftware.code-spell-checker",
     // 代码格式化
     "charliermarsh.ruff",
-    // 代码风格和质量检查
-    "matangover.mypy",
     // git
     "mhutchie.git-graph",
     "redjue.git-commit-plugin"
