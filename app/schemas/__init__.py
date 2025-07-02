@@ -1,5 +1,9 @@
-from app.schemas.auth import *  # noqa: F403
-from app.schemas.history import *  # noqa: F403
-from app.schemas.llm import *  # noqa: F403
-from app.schemas.paser import *  # noqa: F403
-from app.schemas.user import *  # noqa: F403
+from app.schemas import (
+    auth,  # noqa: F401
+    emb,  # noqa: F401
+    history,  # noqa: F401
+    llm,  # noqa: F401
+    paser,  # noqa: F401
+    upload,  # noqa: F401
+    user,  # noqa: F401
+)

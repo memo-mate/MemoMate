@@ -39,9 +39,7 @@ class PdfParser:
         logging.getLogger("fitz").setLevel(logging.ERROR)
         logging.getLogger("PIL").setLevel(logging.ERROR)
 
-    def __call__(
-        self, file_path: str | Path, *args: Any, **kwargs: Any
-    ) -> list[Document]:
+    def __call__(self, file_path: str | Path, *args: Any, **kwargs: Any) -> list[Document]:
         "处理文档并返回分块后的文档列表"
         return self.chunk(file_path)
 
@@ -82,9 +80,7 @@ class PdfParser:
         for i, chunk in enumerate(chunks):
             chunk.metadata["chunk_index"] = i
             chunk.metadata["chunk_len"] = len(chunks)
-            estimated_page = (
-                i * chunk.page_content.count("\n\n") // (metadata["total_pages"] * 2)
-            )
+            estimated_page = i * chunk.page_content.count("\n\n") // (metadata["total_pages"] * 2)
             chunk.metadata["page"] = min(estimated_page, metadata["total_pages"] - 1)
             chunk.metadata["page_label"] = str(chunk.metadata["page"] + 1)
 
@@ -133,9 +129,7 @@ class PdfParser:
                 section_text = f"# {section.content}"
 
                 if len(section_text) <= settings.CHUNK_SIZE * 1.2:
-                    documents.append(
-                        Document(page_content=section_text, metadata=metadata)
-                    )
+                    documents.append(Document(page_content=section_text, metadata=metadata))
                 else:
                     try:
                         text_splitter = RecursiveCharacterTextSplitter(
@@ -155,16 +149,10 @@ class PdfParser:
                                 "",
                             ],
                         )
-                        sub_chunks = text_splitter.create_documents(
-                            [section_text], [metadata]
-                        )
-                        if sub_chunks and not sub_chunks[0].page_content.startswith(
-                            f"# {section.title}"
-                        ):
+                        sub_chunks = text_splitter.create_documents([section_text], [metadata])
+                        if sub_chunks and not sub_chunks[0].page_content.startswith(f"# {section.title}"):
                             title_text = f"# {section.title}\n\n"
-                            sub_chunks[0].page_content = (
-                                title_text + sub_chunks[0].page_content
-                            )
+                            sub_chunks[0].page_content = title_text + sub_chunks[0].page_content
                         for chunk in sub_chunks:
                             chunk.metadata["title"] = section.title
                             chunk.metadata["level"] = section.level
@@ -176,14 +164,10 @@ class PdfParser:
                             section_title=section.title,
                             error=str(e),
                         )
-                        documents.append(
-                            Document(page_content=section_text, metadata=metadata)
-                        )
+                        documents.append(Document(page_content=section_text, metadata=metadata))
 
         if not documents:
-            logger.warning(
-                "未生成任何结构化文档块，回退到基本分块", file_path=str(file_path)
-            )
+            logger.warning("未生成任何结构化文档块，回退到基本分块", file_path=str(file_path))
             return self._basic_split(file_path)
 
         for i, doc in enumerate(documents):
@@ -219,12 +203,8 @@ class PdfParser:
                     {
                         "creator": pdf_metadata.get("creator", ""),
                         "producer": pdf_metadata.get("producer", ""),
-                        "creationdate": self._convert_pdf_date(
-                            pdf_metadata.get("creationDate", "")
-                        ),
-                        "moddate": self._convert_pdf_date(
-                            pdf_metadata.get("modDate", "")
-                        ),
+                        "creationdate": self._convert_pdf_date(pdf_metadata.get("creationDate", "")),
+                        "moddate": self._convert_pdf_date(pdf_metadata.get("modDate", "")),
                     }
                 )
 
@@ -291,13 +271,9 @@ class PdfParser:
                         continue
 
                     max_font_size = max(span["size"] for span in line["spans"])
-                    is_bold = any(
-                        "bold" in span["font"].lower() for span in line["spans"]
-                    )
+                    is_bold = any("bold" in span["font"].lower() for span in line["spans"])
 
-                    if not self._is_likely_title(
-                        text, max_font_size, normal_text_size, is_bold
-                    ):
+                    if not self._is_likely_title(text, max_font_size, normal_text_size, is_bold):
                         continue
 
                     title_info = self._parse_title_format(text)
@@ -325,14 +301,12 @@ class PdfParser:
                                 current_section = number
                                 current_subsection = None
                         elif level == 3:
-                            if current_chapter == number.split(".")[
-                                0
-                            ] and current_section == ".".join(number.split(".")[:2]):
+                            if current_chapter == number.split(".")[0] and current_section == ".".join(
+                                number.split(".")[:2]
+                            ):
                                 current_subsection = number
 
-                    entries.append(
-                        TOCEntry(title=text, level=level, page_number=page_num + 1)
-                    )
+                    entries.append(TOCEntry(title=text, level=level, page_number=page_num + 1))
 
         return entries
 
@@ -379,21 +353,14 @@ class PdfParser:
                 try:
                     current_section_num = int(current_section.split(".")[-1])
                     new_section_num = int(parts[-1])
-                    if (
-                        parts[0] == current_section.split(".")[0]
-                        and new_section_num != current_section_num + 1
-                    ):
+                    if parts[0] == current_section.split(".")[0] and new_section_num != current_section_num + 1:
                         return False
                 except ValueError:
                     return False
             return True
 
         if level == 3:
-            if not (
-                len(parts) == 3
-                and current_chapter == parts[0]
-                and current_section == f"{parts[0]}.{parts[1]}"
-            ):
+            if not (len(parts) == 3 and current_chapter == parts[0] and current_section == f"{parts[0]}.{parts[1]}"):
                 return False
 
             if current_subsection is not None:
@@ -412,21 +379,14 @@ class PdfParser:
 
         return False
 
-    def _is_likely_title(
-        self, text: str, font_size: float, normal_text_size: float, is_bold: bool
-    ) -> bool:
+    def _is_likely_title(self, text: str, font_size: float, normal_text_size: float, is_bold: bool) -> bool:
         """判断是否可能是标题"""
         content = re.sub(r"^[\d.]+\s+", "", text).strip()
 
         if len(content) < 2:
             return False
 
-        if (
-            text.endswith(("。", "，", "；", "："))
-            or text[-1].islower()
-            or "=" in text
-            or re.search(r"[a-z]+\(", text)
-        ):
+        if text.endswith(("。", "，", "；", "：")) or text[-1].islower() or "=" in text or re.search(r"[a-z]+\(", text):
             return False
 
         if not (font_size > normal_text_size * 1.1 or is_bold):
@@ -466,9 +426,7 @@ class PdfParser:
 
                 return number, title_text, level
 
-        if len(text) < 40 and not text.endswith(
-            ("。", "，", "；", "：", ".", ",", ";", ":")
-        ):
+        if len(text) < 40 and not text.endswith(("。", "，", "；", "：", ".", ",", ";", ":")):
             if text in COMMON_TITLE_KEYWORDS:
                 return "", text, 1  # 默认作为一级标题
 
@@ -494,9 +452,7 @@ class PdfParser:
                 return sizes[len(sizes) // 2]
         return 11  # 默认值
 
-    def _build_sections(
-        self, file_path: Path, toc_entries: list[TOCEntry]
-    ) -> list[DocumentSection]:
+    def _build_sections(self, file_path: Path, toc_entries: list[TOCEntry]) -> list[DocumentSection]:
         """根据目录条目构建文档章节结构"""
         try:
             sections = []
@@ -557,9 +513,7 @@ class PdfParser:
                 )
                 sections.append(section)
 
-            logger.info(
-                "章节构建完成", file_path=str(file_path), section_count=len(sections)
-            )
+            logger.info("章节构建完成", file_path=str(file_path), section_count=len(sections))
             return sections
 
         except Exception as e:

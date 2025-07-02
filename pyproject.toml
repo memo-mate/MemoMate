@@ -47,6 +47,10 @@ dependencies = [
     "faster-whisper>=1.1.1",
     "kafka-python>=2.1.2",
     "chromadb>=1.0.8",
+    "pikepdf>=9.9.0",
+    "pypdf2>=3.0.1",
+    "reportlab>=4.4.2",
+    "pdfminer-six>=20250506",
 ]
 
 [dependency-groups]
