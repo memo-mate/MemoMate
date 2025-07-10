@@ -30,7 +30,9 @@ class MarkdownParser:
             list[Document]: 分割后的文档块列表
         """
         # 使用提供的文件路径或默认路径
-        doc_path = file_path or r"/Users/datagrand/Documents/articles/SQLAlchemy简单用法.md"
+        if not file_path:
+            raise ValueError("file_path is required")
+        doc_path = file_path
 
         # 检查文件类型并使用相应的加载器
         file_suffix = Path(doc_path).suffix.lower()
@@ -78,7 +80,9 @@ class MarkdownParser:
             list[Document]: 分割后的文档块列表，按标题结构组织
         """
         # 使用提供的文件路径或默认路径
-        doc_path = file_path or r"/Users/datagrand/Documents/articles/SQLAlchemy简单用法.md"
+        if not file_path:
+            raise ValueError("file_path is required")
+        doc_path = file_path
 
         if Path(doc_path).suffix.lower() != ".md":
             logger.warning("该方法仅适用于Markdown文档", file_path=doc_path)
@@ -132,7 +136,9 @@ class MarkdownParser:
             list[Document]: 分割后的文档块列表，每个块保持结构完整性
         """
         # 使用提供的文件路径或默认路径
-        doc_path = file_path or r"/Users/datagrand/Documents/articles/SQLAlchemy简单用法.md"
+        if not file_path:
+            raise ValueError("file_path is required")
+        doc_path = file_path
 
         # 检查文件类型
         file_suffix = Path(doc_path).suffix.lower()
@@ -358,4 +364,4 @@ if __name__ == "__main__":
     # 使用rich预览分块结果
     # parser.preview_chunks()
     # 使用结构保留分块方法预览
-    parser.preview_all_chunks(preserve_structure=True)
+    parser.preview_all_chunks(file_path=r"/Users/daoji/Documents/Maturin.md", preserve_structure=True)

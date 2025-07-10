@@ -1,5 +1,16 @@
+<!-- markdownlint-restore -->
+
+<div align="center">
+
 # MemoMate（待更新）
 
+![GitHub License](https://img.shields.io/github/license/memo-mate/MemoMate)
+[![GitHub stars](https://img.shields.io/github/stars/memo-mate/MemoMate.svg)](https://github.com/memo-mate/MemoMate/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/memo-mate/MemoMate.svg)](https://github.com/memo-mate/MemoMate/network)
+[![GitHub issues](https://img.shields.io/github/issues-raw/memo-mate/MemoMate)](https://github.com/memo-mate/MemoMate/issues)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/memo-mate/MemoMate)
+
+</div>
 ### 查询同类型问题/事故
 
 ### 配置环境
