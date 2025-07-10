@@ -7,7 +7,7 @@ from langchain_community.document_loaders import PlaywrightURLLoader, WebBaseLoa
 from langchain_community.tools.ddg_search.tool import DuckDuckGoSearchResults
 from langchain_community.vectorstores import Chroma
 from langchain_core.documents import Document
-from langchain_core.tools import tool
+from langchain_core.tools import tool as langchain_tool
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from app.rag.embedding.embeeding_model import EmbeddingFactory
@@ -41,7 +41,7 @@ def _clean_text(text: str) -> str:
     return text
 
 
-@tool
+@langchain_tool
 async def duck_search(query: str) -> list[Document]:
     """Search the web for information."""
     search_results = await DuckDuckGoSearchResults(output_format="json", max_results=10).arun(query)
