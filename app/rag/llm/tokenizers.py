@@ -38,7 +38,8 @@ class TokenCounter:
             case _:
                 raise ValueError(f"不支持的tokenizer类型: {self.tokenizer_type}")
 
-    def estimate_tokens(self, text: str) -> int:
+    @staticmethod
+    def estimate_tokens(text: str) -> int:
         """简单估算 token 数量（适用于快速估算）"""
         # 英文约每4个字符1个token
         # 中文约每1.5个字符1个token

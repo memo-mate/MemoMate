@@ -76,6 +76,8 @@ services:
       - "6333:6333"
     environment:
       - TZ=Asia/Shanghai
+    volumes:
+      - ./qdrant_storage:/qdrant/storage
 
 # 配置文件
 # configs:

@@ -1,3 +1,6 @@
+from threading import Lock
+from typing import Literal, TypedDict
+
 from langchain_core.embeddings import Embeddings
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_openai import OpenAIEmbeddings
@@ -37,14 +40,53 @@ class MemoMateEmbeddings:
         api_key: str = settings.OPENAI_API_KEY,
         base_url: str = settings.OPENAI_API_BASE,
         model_name: str = "text-embedding-3-large",
-        normalize: bool = True,
     ) -> Embeddings:
         """OpenAI嵌入"""
         embedding_model = OpenAIEmbeddings(
             model=model_name,
             api_key=api_key,
             base_url=base_url,
-            # encode_kwargs={"normalize_embeddings": normalize},
-            dimensions=1024,
         )
         return embedding_model
+
+
+class EmbeddingConfig(TypedDict):
+    provider: Literal["openai", "huggingface"]
+    model: str | None = None
+    api_key: str | None = None
+    base_url: str | None = None
+    driver: EmbeddingDriverEnum | None = None
+    normalize: bool | None = None
+
+
+class EmbeddingFactory:
+    _instance = None
+    _config = None
+    _lock = Lock()
+
+    @classmethod
+    def init(cls, config: EmbeddingConfig):
+        with cls._lock:
+            if cls._config != config:
+                print("[EmbeddingFactory] Creating new embedding with config:", config)
+                # 动态支持多模型
+                if config.get("provider") == "openai":
+                    cls._instance = MemoMateEmbeddings.openai_embedding(
+                        model_name=config.get("model", "text-embedding-3-small"),
+                        api_key=config.get("api_key", settings.OPENAI_API_KEY),
+                        base_url=config.get("base_url", settings.OPENAI_API_BASE),
+                    )
+                elif config.get("provider") == "huggingface":
+                    cls._instance = MemoMateEmbeddings.local_embedding(
+                        model_name=config["model"],
+                        driver=config.get("driver", EmbeddingDriverEnum.CPU),
+                    )
+                else:
+                    raise ValueError("Unsupported embedding provider")
+                cls._config = config
+
+    @classmethod
+    def get(cls) -> Embeddings:
+        if cls._instance is None:
+            raise RuntimeError("EmbeddingFactory not initialized. Call init(config) first.")
+        return cls._instance

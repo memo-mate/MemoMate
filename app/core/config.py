@@ -134,7 +134,7 @@ class Settings(BaseSettings):
     CHUNK_OVERLAP: int = 50
 
     # OpenAI API Key
-    OPENAI_API_KEY: str
+    OPENAI_API_KEY: str = ""
     OPENAI_API_BASE: str = "https://api.openai.com/v1"
     CHAT_MODEL: str = "gpt-4o-mini"
 
@@ -168,6 +168,19 @@ class Settings(BaseSettings):
 
     # Kafka 配置
     KAFKA_BOOTSTRAP_SERVERS: str = "localhost:9092"
+
+    OPENRUOTER_API_KEY: str = ""
+    OPENROUTER_API_BASE: str = "https://openrouter.ai/api/v1"
+
+    SILICONFLOW_API_KEY: str = ""
+    SILICONFLOW_API_BASE: str = "https://api.siliconflow.cn/"
+
+    MCP_CONFIG: dict = {
+        "mcpServers": {
+            "context7": {"url": "https://mcp.context7.com/mcp"},
+            "deepwiki": {"url": "https://mcp.deepwiki.com/mcp"},
+        }
+    }
 
 
 settings: Settings = Settings()  # type: ignore

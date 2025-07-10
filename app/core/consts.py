@@ -2,6 +2,8 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 
+DATA_DIR = PROJECT_ROOT / "data"
+
 KAFKA_CONSUMER_PARSER_GROUP_ID = "paser"
 
 MODEL_PATH = PROJECT_ROOT / "models"

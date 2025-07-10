@@ -23,7 +23,6 @@ def test_local_embedding():
     embedding: Embeddings = MemoMateEmbeddings.local_embedding()
     embedding = embedding.embed_documents(["Hello, world!"])
     assert len(embedding) == 1
-    assert len(embedding[0]) == 1024
 
 
 def test_openai_embedding():

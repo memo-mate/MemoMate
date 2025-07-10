@@ -20,7 +20,6 @@ from app.crud.history_message import add_history_message
 from app.enums import HistoryMessageType
 from app.rag.llm.completions import LLM, LLMParams, ModelAPIType, RAGLLMPrompt
 from app.rag.llm.history import MemoMateMemory
-from app.rag.retriever.base_retriever import BaseRetriever
 from app.schemas.llm import ChatResponse, RAGChatRequest
 
 router = APIRouter()
@@ -35,10 +34,10 @@ class RAGWebSocketChatMessage(BaseModel):
     retrieve_top_k: int = Field(default=5, description="检索文档数量")
 
 
-# 创建检索器实例
-retriever = BaseRetriever()
-# 将检索器转换为langchain检索器
-langchain_retriever = retriever.as_langchain_retriever()
+# # 创建检索器实例
+# retriever = BaseRetriever()
+# # 将检索器转换为langchain检索器
+# langchain_retriever = retriever.as_langchain_retriever()
 
 
 @router.post("/chat", response_model=ChatResponse, description="RAG对话接口")
