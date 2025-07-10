@@ -36,5 +36,6 @@ def normal_user_token_headers(client: TestClient, db: Session) -> dict[str, str]
 
 
 @pytest.fixture(autouse=True)
-def init_logger() -> None:
-    setup_logging(json_logs=False, log_level="DEBUG")
+def init_logger(request: pytest.FixtureRequest) -> None:
+    _level = request.config.getini("log_cli_level")
+    setup_logging(json_logs=False, log_level=_level)
