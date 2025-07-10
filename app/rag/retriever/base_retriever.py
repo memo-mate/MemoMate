@@ -1,6 +1,7 @@
 from langchain_core.documents import Document
 
 from app.core import settings
+from app.core.consts import DATA_DIR
 from app.core.log_adapter import logger
 from app.rag.embedding.embedding_db import QdrantVectorStore
 from app.rag.embedding.embeeding_model import MemoMateEmbeddings
@@ -27,7 +28,7 @@ class BaseRetriever:
             embeddings=self.embeddings,
             url=vector_store_url,
             api_key=vector_store_api_key,
-            path=vector_store_path,
+            path=DATA_DIR / vector_store_path,
         )
 
     def retrieve(self, query: str, top_k: int = 5) -> list[Document]:
