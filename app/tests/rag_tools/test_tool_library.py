@@ -4,7 +4,7 @@ import rich
 
 from app.enums.embedding import EmbeddingDriverEnum
 from app.rag.embedding.embeeding_model import EmbeddingFactory
-from app.tool_searcher.tool_library import ToolLibrary
+from app.rag_tools.tool_library import ToolLibrary
 
 
 class TrigonometryCalculator:
