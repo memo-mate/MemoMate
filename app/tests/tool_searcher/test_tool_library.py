@@ -1,7 +1,9 @@
-import asyncio
-import logging
 import math
 
+import rich
+
+from app.enums.embedding import EmbeddingDriverEnum
+from app.rag.embedding.embeeding_model import EmbeddingFactory
 from app.tool_searcher.tool_library import ToolLibrary
 
 
@@ -43,11 +45,32 @@ class TrigonometryCalculator:
         """
         return math.tan(x)
 
+    @staticmethod
+    def demo(query: str | None = None):
+        """
+        A demo function.
+        """
+        return query
 
-logging.basicConfig(level=logging.INFO)
 
-
-async def main() -> None:
+async def test_tool_library() -> None:
+    # 使用huggingface的bge-m3模型
+    EmbeddingFactory.init(
+        {
+            "provider": "huggingface",
+            "model": "BAAI/bge-m3",
+            "driver": EmbeddingDriverEnum.MAC,
+        }
+    )
+    # 使用openai兼容的api模型
+    # EmbeddingFactory.init(
+    #     {
+    #         "provider": "openai",
+    #         "model": "Qwen/Qwen3-Embedding-8B",
+    #         "api_key": settings.SILICONFLOW_API_KEY,
+    #         "base_url": settings.SILICONFLOW_API_BASE,
+    #     }
+    # )
     TEST_QUESTIONS = {
         "simple": [
             "查询苹果的最新股价和股息数据",
@@ -68,25 +91,37 @@ async def main() -> None:
         ],
     }
 
-    trigonometry_calculator = TrigonometryCalculator()
     tulip = ToolLibrary(
-        chroma_base_dir="tool_db",
+        instance_imports=[TrigonometryCalculator],  # 从类导入tools
+    )
+    await tulip.ainit()
+
+    funciton_list = []
+    for task in TEST_QUESTIONS["standard"]:
+        print(f"{task=}")
+        res = tulip.search(task, top_k=4, similarity_threshold=0.8)
+        # print(f"{res=}")
+        funcs = [r.name for r in res]
+        print(f"{funcs=}")
+        funciton_list.extend(r.model_dump() for r in res)
+
+
+async def test_tool_library_openai_definition() -> None:
+    # 使用huggingface的bge-m3模型
+    EmbeddingFactory.init(
+        {
+            "provider": "huggingface",
+            "model": "BAAI/bge-m3",
+            "driver": EmbeddingDriverEnum.MAC,
+        }
+    )
+    tulip = ToolLibrary(
         # file_imports=[    # 从模块导入tools 函数
         #     ("tools.calendar", []),
         #     ("logics.copilot.tools.stock_tool", []),
         # ],
-        instance_imports=[trigonometry_calculator],  # 从类导入tools
+        instance_imports=[TrigonometryCalculator],  # 从类导入tools
     )
-
-    funciton_list = []
-    for task in TEST_QUESTIONS["simple"]:
-        print(f"{task=}")
-        res = tulip.search(problem_description=task, top_k=4, similarity_threshold=1.5)
-        # print(f"{res=}")
-        funcs = [r.function_name for r in res]
-        print(f"{funcs=}")
-        funciton_list.extend(r.definition for r in res)
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
+    await tulip.ainit()
+    # rich.inspect(tulip.tools["demo"])
+    rich.print(tulip.tools)
