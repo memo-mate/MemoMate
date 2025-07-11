@@ -1,0 +1,27 @@
+---
+alwaysApply: true
+globs: *.py
+---
+
+# 日志工具使用规范
+
+## 日志库导入
+- 避免使用标准库的 `logging`
+- 使用核心模块中封装好的 logger：
+```python
+from app.core.log_adapter import logger
+```
+
+## 日志使用示例
+参考 [app/tests/core/test_log.py](mdc:app/tests/core/test_log.py) 中的示例代码：
+```python
+logger.info("操作描述", variable_name=var)
+logger.error("错误信息", error_code=code, user_id=user_id)
+logger.exception("异常信息", exc_info=e)
+```
+
+## 日志最佳实践
+- 使用结构化日志，通过关键字参数传递变量
+- 提供有意义的日志描述
+- 在异常处理中使用 `logger.exception()` 记录完整的异常信息
+- 避免在日志中记录敏感信息（如密码、token 等）

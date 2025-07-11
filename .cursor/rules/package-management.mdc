@@ -1,0 +1,27 @@
+# 包管理工具使用规范
+
+## UV 包管理器
+- 使用 UV 作为 Python 包管理工具
+- 项目依赖管理通过 [pyproject.toml](mdc:pyproject.toml) 和 [uv.lock](mdc:uv.lock) 文件
+
+## 常用命令
+- 安装依赖：`uv sync`
+- 添加新包：`uv add package-name`
+- 添加开发依赖：`uv add --dev package-name`
+- 运行脚本：`uv run script-name`
+- 运行 Python：`uv run python`
+
+## 备用方案
+- 当 UV 使用不了时，尝试使用 `uv pip` 执行 pip 命令
+- 使用命令行工具时，可以使用 `uvx` 来执行一次性工具
+
+## 项目脚本
+参考 [scripts/](mdc:scripts/) 目录下的脚本：
+- 开发环境：`uv run scripts/dev.sh`
+- 代码格式化：`uv run scripts/format.sh`
+- 代码检查：`uv run scripts/lint.sh`
+- 运行测试：`uv run scripts/test.sh`
+description:
+globs:
+alwaysApply: false
+---

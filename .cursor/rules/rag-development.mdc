@@ -1,0 +1,72 @@
+---
+alwaysApply: true
+globs: app/rag/**/*.py,app/rag_tools/**/*.py
+---
+
+# RAG 系统开发规范
+
+## 系统架构
+RAG 系统包含以下核心组件：
+- **嵌入模型**：[app/rag/embedding/](mdc:app/rag/embedding/)
+- **LLM 模块**：[app/rag/llm/](mdc:app/rag/llm/)
+- **重排序器**：[app/rag/reranker/](mdc:app/rag/reranker/)
+- **检索器**：[app/rag/retriever/](mdc:app/rag/retriever/)
+
+## 嵌入模型
+- 使用 [app/rag/embedding/embeeding_model.py](mdc:app/rag/embedding/embeeding_model.py) 中的嵌入模型
+- 支持自定义 Qdrant 向量数据库：[custom_qdrant.py](mdc:app/rag/embedding/embedding_db/custom_qdrant.py)
+- 确保嵌入维度一致性
+
+## LLM 集成
+- 使用 LangChain 框架集成 LLM
+- 参考 [app/rag/llm/completions.py](mdc:app/rag/llm/completions.py) 实现对话补全
+- 使用 [app/rag/llm/history.py](mdc:app/rag/llm/history.py) 管理对话历史
+- 使用 [app/rag/llm/tokenizers.py](mdc:app/rag/llm/tokenizers.py) 处理分词
+
+## 重排序器
+- 实现基础重排序接口：[app/rag/reranker/base.py](mdc:app/rag/reranker/base.py)
+- 使用交叉编码器：[app/rag/reranker/cross_encoder.py](mdc:app/rag/reranker/cross_encoder.py)
+- 参考示例：[app/rag/reranker/examples.py](mdc:app/rag/reranker/examples.py)
+
+## 检索器
+- 实现基础检索器：[app/rag/retriever/base_retriever.py](mdc:app/rag/retriever/base_retriever.py)
+- 支持多种检索策略
+
+## RAG 工具
+- 使用 [app/rag_tools/tool_library.py](mdc:app/rag_tools/tool_library.py) 中的工具库
+- 实现工具调用和结果处理
+
+## 开发最佳实践
+- 使用异步编程提高性能
+- 实现适当的错误处理和重试机制
+- 记录详细的操作日志
+- 进行充分的单元测试
+
+## 示例代码结构
+```python
+from app.rag.embedding.embeeding_model import EmbeddingModel
+from app.rag.llm.completions import LLMCompletions
+from app.core.log_adapter import logger
+
+class RAGService:
+    def __init__(self):
+        self.embedding_model = EmbeddingModel()
+        self.llm = LLMCompletions()
+
+    async def query(self, question: str) -> str:
+        try:
+            # 嵌入查询
+            query_embedding = await self.embedding_model.embed(question)
+
+            # 检索相关文档
+            documents = await self.retrieve_documents(query_embedding)
+
+            # 生成回答
+            answer = await self.llm.generate(question, documents)
+
+            logger.info("RAG 查询成功", question=question)
+            return answer
+        except Exception as e:
+            logger.exception("RAG 查询失败", exc_info=e)
+            raise
+```

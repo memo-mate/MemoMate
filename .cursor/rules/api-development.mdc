@@ -1,0 +1,60 @@
+---
+alwaysApply: true
+globs: app/api/**/*.py,app/schemas/**/*.py
+---
+
+# API 开发规范
+
+## FastAPI 最佳实践
+- 使用 FastAPI 框架开发 API
+- 遵循 RESTful API 设计原则
+- 使用 Pydantic 模型进行请求和响应验证
+
+## 路由组织
+- 按功能模块组织路由文件
+- 使用 APIRouter 创建路由组
+- 在 [app/api/main.py](mdc:app/api/main.py) 中注册路由
+
+## 数据验证
+- 使用 [app/schemas/](mdc:app/schemas/) 目录下的 Pydantic 模型
+- 为每个 API 端点定义清晰的请求和响应模型
+- 使用类型注解确保数据类型安全
+
+## 依赖注入
+- 使用 [app/api/deps.py](mdc:app/api/deps.py) 中定义的依赖
+- 常用依赖：数据库会话、当前用户认证等
+
+## 错误处理
+- 使用 [app/core/responses.py](mdc:app/core/responses.py) 中的响应模型
+- 提供有意义的错误消息和状态码
+- 记录错误日志用于调试
+
+## 安全性
+- 使用 [app/core/security.py](mdc:app/core/security.py) 中的安全工具
+- 实现适当的认证和授权机制
+- 验证用户输入，防止注入攻击
+
+## 示例 API 结构
+```python
+from fastapi import APIRouter, Depends, HTTPException
+from app.api.deps import get_current_user, get_db
+from app.schemas.user import UserCreate, UserResponse
+from app.core.log_adapter import logger
+
+router = APIRouter()
+
+@router.post("/users/", response_model=UserResponse)
+async def create_user(
+    user: UserCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    try:
+        # 业务逻辑
+        result = await create_user_logic(user, db)
+        logger.info("用户创建成功", user_id=result.id)
+        return result
+    except Exception as e:
+        logger.exception("用户创建失败", exc_info=e)
+        raise HTTPException(status_code=500, detail="创建用户失败")
+```

@@ -1,0 +1,73 @@
+---
+alwaysApply: true
+globs: app/tests/**/*.py,**/test_*.py
+---
+
+# 测试开发规范
+
+## 测试框架
+- 使用 pytest 作为测试框架
+- 配置文件：[pytest.ini](mdc:pytest.ini)
+- 测试配置：[app/tests/conftest.py](mdc:app/tests/conftest.py)
+
+## 测试组织
+按模块组织测试文件：
+- **API 测试**：[app/tests/api/](mdc:app/tests/api/)
+- **核心模块测试**：[app/tests/core/](mdc:app/tests/core/)
+- **CRUD 测试**：[app/tests/crud/](mdc:app/tests/crud/)
+- **RAG 系统测试**：[app/tests/rag/](mdc:app/tests/rag/)
+- **工具测试**：[app/tests/utils/](mdc:app/tests/utils/)
+
+## 测试命名规范
+- 测试文件以 `test_` 开头
+- 测试函数以 `test_` 开头
+- 使用描述性的测试名称
+
+## 测试类型
+- **单元测试**：测试单个函数或方法
+- **集成测试**：测试模块间的交互
+- **API 测试**：测试 API 端点
+
+## 测试工具
+- 使用 pytest fixtures 进行测试数据准备
+- 使用 mock 进行依赖隔离
+- 使用 [app/tests/utils/utils.py](mdc:app/tests/utils/utils.py) 中的测试工具
+
+## 测试最佳实践
+- 每个测试应该独立运行
+- 使用有意义的断言消息
+- 测试覆盖正常和异常情况
+- 使用参数化测试处理多种输入
+
+## 运行测试
+- 运行所有测试：`uv run scripts/test.sh`
+- 运行特定测试：`uv run pytest app/tests/test_specific.py`
+- 生成覆盖率报告：`uv run pytest --cov=app`
+
+## 示例测试结构
+```python
+import pytest
+from app.core.log_adapter import logger
+from app.tests.utils.utils import create_test_user
+
+class TestUserAPI:
+    @pytest.fixture
+    def test_user(self):
+        return create_test_user()
+
+    async def test_create_user_success(self, test_user, client):
+        """测试用户创建成功的情况"""
+        response = await client.post("/users/", json=test_user)
+        assert response.status_code == 201
+        assert response.json()["email"] == test_user["email"]
+
+    async def test_create_user_duplicate_email(self, test_user, client):
+        """测试重复邮箱创建用户失败的情况"""
+        # 先创建一个用户
+        await client.post("/users/", json=test_user)
+
+        # 尝试创建相同邮箱的用户
+        response = await client.post("/users/", json=test_user)
+        assert response.status_code == 400
+        assert "邮箱已存在" in response.json()["detail"]
+```

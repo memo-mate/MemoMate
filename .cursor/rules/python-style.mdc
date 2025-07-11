@@ -1,0 +1,38 @@
+---
+alwaysApply: true
+globs: *.py
+---
+
+# Python 代码风格规范
+
+## 代码格式化
+- 使用 Ruff 工具进行代码格式化
+- 遵循最新的 PEP8 规范，根据 Ruff 的官方代码风格编写代码
+- 使用 `uv run ruff format .` 格式化代码
+
+## 类型注解
+- 使用现代类型注解语法：`X | Y`，而不是 `Optional[X]` 或 `Union[X]`
+- 为函数参数和返回值添加类型注解
+- 使用 `from __future__ import annotations` 支持前向引用
+
+## 异常处理
+在复杂逻辑或需要数据校验的代码块中，主动捕获异常：
+```python
+try:
+    # 业务逻辑
+    ...
+except Exception as e:
+    logger.exception("操作失败", exc_info=e)
+```
+
+## 数据校验
+- 使用 Pydantic 进行数据校验
+- 定义清晰的数据模型和验证规则
+
+## AI 和 RAG 功能
+- 使用最新版本的 LangChain 实现 RAG 和 Agent、LLM 等功能
+- 参考 [app/rag/](mdc:app/rag/) 目录下的实现
+
+## 数据库操作
+- 使用 SQLModel 进行 ORM 操作
+- 参考 [app/models/](mdc:app/models/) 目录下的模型定义

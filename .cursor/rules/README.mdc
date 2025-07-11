@@ -1,0 +1,53 @@
+---
+alwaysApply: true
+---
+
+# MemoMate 项目 Cursor 规则
+
+本目录包含了 MemoMate 项目的 Cursor 规则，用于指导 AI 助手进行代码开发和维护。
+
+## 规则列表
+
+### 1. 项目结构指南 ([project-structure.mdc](mdc:.cursor/rules/project-structure.mdc))
+- **适用范围**：所有文件 (alwaysApply: true)
+- **功能**：提供项目整体结构说明，包括各个模块的职责和文件组织
+
+### 2. Python 代码风格规范 ([python-style.mdc](mdc:.cursor/rules/python-style.mdc))
+- **适用范围**：所有 Python 文件 (*.py) - 自动应用
+- **功能**：定义 Python 代码风格、类型注解、异常处理等规范
+
+### 3. 日志工具使用规范 ([logging.mdc](mdc:.cursor/rules/logging.mdc))
+- **适用范围**：所有 Python 文件 (*.py) - 自动应用
+- **功能**：规范日志库的使用方式和最佳实践
+
+### 4. 包管理工具规范 ([package-management.mdc](mdc:.cursor/rules/package-management.mdc))
+- **适用范围**：所有文件 (alwaysApply: true)
+- **功能**：定义 UV 包管理器的使用方式和常用命令
+
+### 5. API 开发规范 ([api-development.mdc](mdc:.cursor/rules/api-development.mdc))
+- **适用范围**：API 相关文件 (app/api/**/*.py, app/schemas/**/*.py) - 自动应用
+- **功能**：FastAPI 开发规范，包括路由、数据验证、安全性等
+
+### 6. RAG 系统开发规范 ([rag-development.mdc](mdc:.cursor/rules/rag-development.mdc))
+- **适用范围**：RAG 相关文件 (app/rag/**/*.py, app/rag_tools/**/*.py) - 自动应用
+- **功能**：RAG 系统架构、组件使用和开发最佳实践
+
+### 7. 数据库操作规范 ([database.mdc](mdc:.cursor/rules/database.mdc))
+- **适用范围**：数据库相关文件 (app/models/**/*.py, app/crud/**/*.py, app/core/db.py) - 自动应用
+- **功能**：SQLModel ORM 使用、数据模型定义、CRUD 操作规范
+
+### 8. 测试开发规范 ([testing.mdc](mdc:.cursor/rules/testing.mdc))
+- **适用范围**：测试文件 (app/tests/**/*.py, **/test_*.py) - 自动应用
+- **功能**：pytest 测试框架使用、测试组织和最佳实践
+
+## 使用说明
+
+🎯 **所有规则现已设置为自动应用！**
+
+1. **全局规则**：项目结构指南、包管理工具规范等会自动应用到所有文件
+2. **特定文件规则**：根据文件类型和路径自动匹配相应规则
+3. **智能应用**：AI 助手会根据当前编辑的文件自动应用相关规则
+
+## 规则更新
+
+当项目结构或开发规范发生变化时，请及时更新对应的规则文件，确保 AI 助手能够提供准确的指导。

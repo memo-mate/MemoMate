@@ -1,0 +1,95 @@
+---
+alwaysApply: true
+globs: app/models/**/*.py,app/crud/**/*.py,app/core/db.py
+---
+
+# 数据库操作规范
+
+## ORM 框架
+- 使用 SQLModel 进行 ORM 操作
+- 数据库连接配置：[app/core/db.py](mdc:app/core/db.py)
+- 数据库迁移：[app/alembic/](mdc:app/alembic/)
+
+## 数据模型
+数据模型位于 [app/models/](mdc:app/models/) 目录：
+- **用户模型**：[user.py](mdc:app/models/user.py)
+- **上传模型**：[upload.py](mdc:app/models/upload.py)
+- **历史消息**：[history_message.py](mdc:app/models/history_message.py)
+- **任务模型**：[task.py](mdc:app/models/task.py)
+
+## CRUD 操作
+CRUD 操作位于 [app/crud/](mdc:app/crud/) 目录：
+- **用户 CRUD**：[user.py](mdc:app/crud/user.py)
+- **历史消息 CRUD**：[history_message.py](mdc:app/crud/history_message.py)
+
+## 数据库会话管理
+- 使用依赖注入获取数据库会话
+- 确保会话正确关闭
+- 使用事务处理复杂操作
+
+## 数据迁移
+- 使用 Alembic 进行数据库迁移
+- 迁移文件位于 [app/alembic/versions/](mdc:app/alembic/versions/)
+- 配置文件：[alembic.ini](mdc:alembic.ini)
+
+## 最佳实践
+- 使用类型注解确保数据类型安全
+- 实现适当的索引优化查询性能
+- 使用连接池管理数据库连接
+- 记录数据库操作日志
+
+## 示例模型定义
+```python
+from sqlmodel import SQLModel, Field
+from typing import Optional
+from datetime import datetime
+
+class UserBase(SQLModel):
+    email: str = Field(index=True, unique=True)
+    full_name: str
+    is_active: bool = True
+
+class User(UserBase, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    hashed_password: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: Optional[datetime] = None
+
+class UserCreate(UserBase):
+    password: str
+
+class UserUpdate(SQLModel):
+    full_name: Optional[str] = None
+    is_active: Optional[bool] = None
+```
+
+## 示例 CRUD 操作
+```python
+from sqlmodel import Session, select
+from app.models.user import User, UserCreate
+from app.core.security import get_password_hash
+from app.core.log_adapter import logger
+
+class UserCRUD:
+    def create(self, db: Session, user: UserCreate) -> User:
+        try:
+            hashed_password = get_password_hash(user.password)
+            db_user = User(
+                email=user.email,
+                full_name=user.full_name,
+                hashed_password=hashed_password
+            )
+            db.add(db_user)
+            db.commit()
+            db.refresh(db_user)
+            logger.info("用户创建成功", user_id=db_user.id)
+            return db_user
+        except Exception as e:
+            db.rollback()
+            logger.exception("用户创建失败", exc_info=e)
+            raise
+
+    def get_by_email(self, db: Session, email: str) -> User | None:
+        statement = select(User).where(User.email == email)
+        return db.exec(statement).first()
+```

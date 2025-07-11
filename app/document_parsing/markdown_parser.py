@@ -12,6 +12,8 @@ from rich.text import Text
 
 from app.core.config import settings
 from app.core.log_adapter import logger
+from app.rag.embedding.embedding_db.custom_qdrant import QdrantVectorStore
+from app.rag.embedding.embeeding_model import EmbeddingFactory
 
 
 class MarkdownParser:
@@ -125,7 +127,7 @@ class MarkdownParser:
             logger.info("回退到普通分割方法")
             return self.chunk(file_path)
 
-    def structure_preserving_chunk(self, file_path: str | None = None) -> list[Document]:
+    def structure_preserving_chunk(self, file_path: str | Path | None = None) -> list[Document]:
         """
         结构保留分块方法，确保每个块的Markdown语法结构完整性
 
@@ -138,10 +140,16 @@ class MarkdownParser:
         # 使用提供的文件路径或默认路径
         if not file_path:
             raise ValueError("file_path is required")
-        doc_path = file_path
+        if isinstance(file_path, str):
+            doc_path = Path(file_path)
+        else:
+            doc_path = file_path
+
+        if not doc_path.exists():
+            raise FileNotFoundError(f"文件不存在: {doc_path}")
 
         # 检查文件类型
-        file_suffix = Path(doc_path).suffix.lower()
+        file_suffix = doc_path.suffix.lower()
         if file_suffix == ".md":
             # 对Markdown文件，优先使用按标题分割
             return self.chunk_by_headers(doc_path)
@@ -357,6 +365,20 @@ class MarkdownParser:
             logger.exception("预览所有文档块失败", exc_info=e, file_path=file_path)
             console = Console()
             console.print(f"[bold red]处理失败:[/bold red] {str(e)}")
+
+
+def parse_markdown(file_path: str | Path) -> None:
+    docs = MarkdownParser().structure_preserving_chunk(file_path)
+
+    vector_store = QdrantVectorStore(
+        collection_name=settings.QDRANT_COLLECTION,
+        embeddings=EmbeddingFactory.get(),
+        path=settings.QDRANT_PATH,
+        create_collection_if_not_exists=True,
+    )
+
+    ids = vector_store.add_documents(docs)
+    logger.info(f"添加文档到向量库完成，文档ID: {ids}")
 
 
 if __name__ == "__main__":

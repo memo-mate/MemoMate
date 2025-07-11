@@ -1,0 +1,55 @@
+# MemoMate 项目结构指南
+
+## 项目入口点
+- 主应用入口：[app/main.py](mdc:app/main.py)
+- API 路由入口：[app/api/main.py](mdc:app/api/main.py)
+- 后端预启动脚本：[app/backend_pre_start.py](mdc:app/backend_pre_start.py)
+
+## 核心模块
+- **配置管理**：[app/core/config.py](mdc:app/core/config.py)
+- **数据库连接**：[app/core/db.py](mdc:app/core/db.py)
+- **日志适配器**：[app/core/log_adapter.py](mdc:app/core/log_adapter.py)
+- **安全相关**：[app/core/security.py](mdc:app/core/security.py)
+- **中间件**：[app/core/middlewares.py](mdc:app/core/middlewares.py)
+
+## API 路由
+API 路由位于 [app/api/routes/](mdc:app/api/routes/) 目录：
+- 用户认证：[auth.py](mdc:app/api/routes/auth.py)
+- 用户管理：[user.py](mdc:app/api/routes/user.py)
+- 文件上传：[upload.py](mdc:app/api/routes/upload.py)
+- RAG 和 LLM：[rag_llm.py](mdc:app/api/routes/rag_llm.py)
+- 历史记录：[history.py](mdc:app/api/routes/history.py)
+
+## 数据模型
+- **用户模型**：[app/models/user.py](mdc:app/models/user.py)
+- **上传模型**：[app/models/upload.py](mdc:app/models/upload.py)
+- **历史消息**：[app/models/history_message.py](mdc:app/models/history_message.py)
+- **任务模型**：[app/models/task.py](mdc:app/models/task.py)
+
+## RAG 系统
+- **嵌入模型**：[app/rag/embedding/](mdc:app/rag/embedding/)
+- **LLM 模块**：[app/rag/llm/](mdc:app/rag/llm/)
+- **重排序器**：[app/rag/reranker/](mdc:app/rag/reranker/)
+- **检索器**：[app/rag/retriever/](mdc:app/rag/retriever/)
+
+## 文档解析
+文档解析模块位于 [app/document_parsing/](mdc:app/document_parsing/)：
+- PDF 解析：[pdf_parser.py](mdc:app/document_parsing/pdf_parser.py)
+- Word 解析：[word_parser.py](mdc:app/document_parsing/word_parser.py)
+- Excel 解析：[excel_paser.py](mdc:app/document_parsing/excel_paser.py)
+- Markdown 解析：[markdown_parser.py](mdc:app/document_parsing/markdown_parser.py)
+
+## 工具和实用程序
+- **工具库**：[app/tools/](mdc:app/tools/)
+- **实用程序**：[app/utils/](mdc:app/utils/)
+- **RAG 工具**：[app/rag_tools/](mdc:app/rag_tools/)
+
+## 测试
+测试文件位于 [app/tests/](mdc:app/tests/) 目录，按模块组织：
+- API 测试：[app/tests/api/](mdc:app/tests/api/)
+- 核心模块测试：[app/tests/core/](mdc:app/tests/core/)
+- RAG 系统测试：[app/tests/rag/](mdc:app/tests/rag/)
+description:
+globs:
+alwaysApply: false
+---
