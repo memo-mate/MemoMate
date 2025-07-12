@@ -4,7 +4,7 @@ PROJECT_ROOT = Path(__file__).parent.parent.parent
 
 DATA_DIR = PROJECT_ROOT / "data"
 
-KAFKA_CONSUMER_PARSER_GROUP_ID = "paser"
+KAFKA_CONSUMER_PARSER_GROUP_ID = "document-parser-group"
 
 MODEL_PATH = PROJECT_ROOT / "models"
 

@@ -1,24 +1,25 @@
-from typing import Literal, TypedDict
+from typing import TypedDict
 
 import orjson
 import rich
 from confluent_kafka import Consumer, Message, Producer
 
-from app.core import settings
+from app.core import consts, settings
 from app.core.log_adapter import logger
 from app.document_parsing.markdown_parser import parse_markdown
+from app.enums import QueueTopic
 
 
 class DocumentParserDict(TypedDict):
     id: str
     file_path: str
-    task_type: Literal["document_parser", "summary_generator", "external_crawler"]
+    task_type: QueueTopic
     retry_count: int
 
 
 class ConsumerFactory:
     def __init__(self, topic: str):
-        self.group_id = "document-parser-group"
+        self.group_id = consts.KAFKA_CONSUMER_PARSER_GROUP_ID
         self.topic = topic
         self.dlq_topic = f"{topic}.dlq"
         self.consumer = Consumer(
@@ -26,7 +27,7 @@ class ConsumerFactory:
                 "bootstrap.servers": settings.KAFKA_BOOTSTRAP_SERVERS,
                 "group.id": self.group_id,
                 "auto.offset.reset": "earliest",
-                "enable.auto.commit": "false",  # this allows to easily replay the same events in development
+                "enable.auto.commit": "true",
             }
         )
         self.producer = Producer({"bootstrap.servers": settings.KAFKA_BOOTSTRAP_SERVERS})
@@ -55,12 +56,12 @@ class ConsumerFactory:
         try:
             task_type = data["task_type"]
             match task_type:
-                case "document_parser":
+                case QueueTopic.FILE_PARSING_TASK:
                     parse_markdown(data["file_path"])
-                case "summary_generator":
+                case QueueTopic.SUMMARY_GENERATOR:
                     # TODO: process summary generator
                     pass
-                case "external_crawler":
+                case QueueTopic.EXTERNAL_CRAWLER:
                     # TODO: process external crawler
                     pass
                 case _:

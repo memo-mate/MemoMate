@@ -1,6 +1,7 @@
 from enum import StrEnum
 
 from .embedding import *  # noqa: F403
+from .queue import *  # noqa: F403
 
 
 class AccessRole(StrEnum):
