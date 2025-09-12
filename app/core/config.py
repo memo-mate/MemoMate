@@ -131,7 +131,7 @@ class Settings(BaseSettings):
 
     # 分块配置
     CHUNK_SIZE: int = 1024
-    CHUNK_OVERLAP: int = 50
+    CHUNK_OVERLAP: int = 100
 
     # OpenAI API Key
     OPENAI_API_KEY: str = ""

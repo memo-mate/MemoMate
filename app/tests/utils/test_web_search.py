@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from langchain_core.documents import Document
 
-from app.utils.web_search_Summary import (
+from app.utils.web_search_summary import (
     DocumentFormat,
     HumanReviewRequiredException,
     ProcessingConfig,
@@ -32,7 +32,7 @@ class TestWebSearchProcessor:
 
     def test_get_strategy(self, processor):
         """测试获取摘要策略"""
-        from app.utils.web_search_Summary import ConciseStrategy
+        from app.utils.web_search_summary import ConciseStrategy
 
         strategy = processor.get_strategy(SummaryStrategy.CONCISE.value)
         assert isinstance(strategy, ConciseStrategy)
@@ -177,14 +177,15 @@ class TestSummaryStrategies:
 
     def test_strategy_templates(self):
         """测试各种策略的模板"""
-        from app.utils.web_search_Summary import (
+        from app.utils.web_search_summary import (
             BulletPointsStrategy,
             ConciseStrategy,
             DetailedStrategy,
+            PromptTemplateStrategy,
             TechnicalStrategy,
         )
 
-        strategies = [
+        strategies: list[tuple[PromptTemplateStrategy, str]] = [
             (ConciseStrategy(), "简洁"),
             (DetailedStrategy(), "详细"),
             (BulletPointsStrategy(), "要点"),
@@ -201,14 +202,14 @@ class TestDocumentLoaderFactory:
 
     def test_web_loader(self):
         """测试Web加载器"""
-        from app.utils.web_search_Summary import DocumentLoaderFactory
+        from app.utils.web_search_summary import DocumentLoaderFactory
 
         loader = DocumentLoaderFactory.create_loader("https://example.com", DocumentFormat.WEB)
         assert loader is not None
 
     def test_unsupported_format(self):
         """测试不支持的格式"""
-        from app.utils.web_search_Summary import DocumentLoaderFactory
+        from app.utils.web_search_summary import DocumentLoaderFactory
 
         with pytest.raises(ValueError, match="不支持的文档格式"):
             DocumentLoaderFactory.create_loader("test", "unsupported")

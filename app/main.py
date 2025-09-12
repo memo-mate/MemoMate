@@ -7,7 +7,7 @@ from app.api.main import api_router
 from app.core.config import settings
 from app.core.responses import CustomORJSONResponse
 from app.core.sessions import SessionFactory
-from app.tests.utils.aio_producer import AIOProducer
+from app.utils.aio_producer import AIOProducer
 from app.utils.art_name import run_figlet_lolcat
 
 

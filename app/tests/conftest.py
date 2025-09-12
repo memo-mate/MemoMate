@@ -10,6 +10,7 @@ from app.core.log_adapter import setup_logging
 from app.main import app  # noqa
 from app.tests.utils.user import authentication_token_from_email
 from app.tests.utils.utils import get_superuser_token_headers
+from app.utils.aio_producer import AIOProducer
 
 
 # @pytest.fixture(scope="session", autouse=True)
@@ -39,3 +40,9 @@ def normal_user_token_headers(client: TestClient, db: Session) -> dict[str, str]
 def init_logger(request: pytest.FixtureRequest) -> None:
     _level = request.config.getini("log_cli_level")
     setup_logging(json_logs=False, log_level=_level)
+
+
+@pytest.fixture(autouse=True)
+async def producer():
+    with AIOProducer({"bootstrap.servers": settings.KAFKA_BOOTSTRAP_SERVERS}) as producer:
+        yield producer

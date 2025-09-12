@@ -4,12 +4,11 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 
-from app.api.deps import SessionDep, get_current_user
+from app.api.deps import ProducerDep, SessionDep, get_current_user
 from app.core.config import settings
 from app.enums.queue import QueueTopic
 from app.models.task import FileParsingTask
 from app.schemas.paser import FileParsingTaskCreate, FileParsingTaskUploadParams
-from app.utils.task_queue import send_message_to_topic
 
 router = APIRouter(dependencies=[Depends(get_current_user)])
 
@@ -23,6 +22,7 @@ router = APIRouter(dependencies=[Depends(get_current_user)])
 def create_file_parsing_task(
     task: FileParsingTaskUploadParams,
     session: SessionDep,
+    producer: ProducerDep,
     file: UploadFile = File(...),
 ) -> Any:
     file_path = f"{settings.UPLOAD_DIR_PATH}/{file.filename}"
@@ -49,7 +49,7 @@ def create_file_parsing_task(
     session.refresh(task)
 
     # 发送消息到kafka
-    send_message_to_topic(QueueTopic.FILE_PARSING_TASK, task.model_dump())
+    producer.produce(QueueTopic.FILE_PARSING_TASK, task.model_dump())
     return task
 
 

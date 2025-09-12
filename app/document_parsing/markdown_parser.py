@@ -3,7 +3,7 @@ from typing import Any
 
 from langchain_community.document_loaders import Docx2txtLoader, UnstructuredMarkdownLoader
 from langchain_core.documents import Document
-from langchain_text_splitters import MarkdownHeaderTextSplitter, MarkdownTextSplitter
+from langchain_text_splitters import MarkdownHeaderTextSplitter, MarkdownTextSplitter, RecursiveCharacterTextSplitter
 from rich.console import Console, Group
 from rich.live import Live
 from rich.markdown import Markdown
@@ -17,6 +17,10 @@ from app.rag.embedding.embeeding_model import EmbeddingFactory
 
 
 class MarkdownParser:
+    def __init__(self):
+        self.chunk_size = settings.CHUNK_SIZE
+        self.chunk_overlap = settings.CHUNK_OVERLAP
+
     def __call__(self, file_path: str, *args: Any, **kwds: Any) -> list[Document]:
         """处理文档并返回分块后的文档列表"""
         return self.chunk(file_path)
@@ -112,7 +116,11 @@ class MarkdownParser:
             )
 
             # 按标题分割文档
-            docs = markdown_splitter.split_text(markdown_text)
+            md_header_splits = markdown_splitter.split_text(markdown_text)
+            text_splitter = RecursiveCharacterTextSplitter(chunk_size=self.chunk_size, chunk_overlap=self.chunk_overlap)
+
+            # 二次切分
+            docs = text_splitter.split_documents(md_header_splits)
 
             # 添加文件路径信息到元数据
             for doc in docs:
@@ -386,4 +394,4 @@ if __name__ == "__main__":
     # 使用rich预览分块结果
     # parser.preview_chunks()
     # 使用结构保留分块方法预览
-    parser.preview_all_chunks(file_path=r"/Users/daoji/Documents/Maturin.md", preserve_structure=True)
+    parser.preview_all_chunks(file_path=r"data/md_source/AI 提示词优化.md", preserve_structure=True)
