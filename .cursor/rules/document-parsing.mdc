@@ -1,0 +1,67 @@
+---
+globs: app/document_parsing/**/*.py
+---
+
+# 文档解析开发规范
+
+## 解析器架构
+文档解析模块位于 [app/document_parsing/](mdc:app/document_parsing/)，支持多种文档格式：
+- **PDF 解析**：[pdf_parser.py](mdc:app/document_parsing/pdf_parser.py)
+- **Word 解析**：[word_parser.py](mdc:app/document_parsing/word_parser.py)
+- **Excel 解析**：[excel_paser.py](mdc:app/document_parsing/excel_paser.py)
+- **Markdown 解析**：[markdown_parser.py](mdc:app/document_parsing/markdown_parser.py)
+- **文本解析**：[txt_paser.py](mdc:app/document_parsing/txt_paser.py)
+- **JSON 解析**：[json_paser.py](mdc:app/document_parsing/json_paser.py)
+- **视频字幕提取**：[video_subtitle_extractor.py](mdc:app/document_parsing/video_subtitle_extractor.py)
+
+## 公共模块
+- **内容类型**：[common/content_types.py](mdc:app/document_parsing/common/content_types.py)
+- **数据模型**：[common/models.py](mdc:app/document_parsing/common/models.py)
+- **标题模式**：[common/title_patterns.py](mdc:app/document_parsing/common/title_patterns.py)
+
+## PDF 特殊功能
+- **水印添加**：[pdf_core/watermark/add.py](mdc:app/document_parsing/pdf_core/watermark/add.py)
+- **水印移除**：[pdf_core/watermark/remove.py](mdc:app/document_parsing/pdf_core/watermark/remove.py)
+- **PDF 工具**：[pdf_core/utils.py](mdc:app/document_parsing/pdf_core/utils.py)
+
+## 开发最佳实践
+- 每个解析器应返回统一的数据结构
+- 使用 [document_processor.py](mdc:app/document_parsing/document_processor.py) 作为统一处理入口
+- 处理文档时要考虑编码问题和异常情况
+- 使用日志记录解析过程和错误
+- 对大文件进行流式处理，避免内存溢出
+
+## 示例解析器结构
+```python
+from app.core.log_adapter import logger
+from app.document_parsing.common.models import ParsedDocument
+
+class DocumentParser:
+    def __init__(self):
+        self.supported_formats = [".pdf", ".docx", ".txt"]
+
+    async def parse(self, file_path: str) -> ParsedDocument:
+        try:
+            # 检测文件格式
+            file_format = self._detect_format(file_path)
+
+            # 解析文档内容
+            content = await self._parse_content(file_path, file_format)
+
+            # 返回统一格式
+            return ParsedDocument(
+                content=content,
+                metadata=self._extract_metadata(file_path)
+            )
+        except Exception as e:
+            logger.exception("文档解析失败", file_path=file_path, exc_info=e)
+            raise
+
+    def _detect_format(self, file_path: str) -> str:
+        # 检测逻辑
+        pass
+
+    async def _parse_content(self, file_path: str, format: str) -> str:
+        # 解析逻辑
+        pass
+```

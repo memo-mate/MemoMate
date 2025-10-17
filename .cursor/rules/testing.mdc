@@ -1,5 +1,4 @@
 ---
-alwaysApply: true
 globs: app/tests/**/*.py,**/test_*.py
 ---
 

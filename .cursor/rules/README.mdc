@@ -8,46 +8,138 @@ alwaysApply: true
 
 ## 规则列表
 
-### 1. 项目结构指南 ([project-structure.mdc](mdc:.cursor/rules/project-structure.mdc))
+### 全局规则
+
+#### 1. 项目结构指南 ([project-structure.mdc](mdc:.cursor/rules/project-structure.mdc))
 - **适用范围**：所有文件 (alwaysApply: true)
 - **功能**：提供项目整体结构说明，包括各个模块的职责和文件组织
 
-### 2. Python 代码风格规范 ([python-style.mdc](mdc:.cursor/rules/python-style.mdc))
-- **适用范围**：所有 Python 文件 (*.py) - 自动应用
-- **功能**：定义 Python 代码风格、类型注解、异常处理等规范
-
-### 3. 日志工具使用规范 ([logging.mdc](mdc:.cursor/rules/logging.mdc))
-- **适用范围**：所有 Python 文件 (*.py) - 自动应用
-- **功能**：规范日志库的使用方式和最佳实践
-
-### 4. 包管理工具规范 ([package-management.mdc](mdc:.cursor/rules/package-management.mdc))
+#### 2. 包管理工具规范 ([package-management.mdc](mdc:.cursor/rules/package-management.mdc))
 - **适用范围**：所有文件 (alwaysApply: true)
 - **功能**：定义 UV 包管理器的使用方式和常用命令
 
-### 5. API 开发规范 ([api-development.mdc](mdc:.cursor/rules/api-development.mdc))
-- **适用范围**：API 相关文件 (app/api/**/*.py, app/schemas/**/*.py) - 自动应用
+### Python 代码规则
+
+#### 3. Python 代码风格规范 ([python-style.mdc](mdc:.cursor/rules/python-style.mdc))
+- **适用范围**：`*.py`
+- **功能**：定义 Python 代码风格、类型注解、异常处理等规范
+
+#### 4. 日志工具使用规范 ([logging.mdc](mdc:.cursor/rules/logging.mdc))
+- **适用范围**：`*.py`
+- **功能**：规范日志库的使用方式和最佳实践
+
+### 后端开发规则
+
+#### 5. API 开发规范 ([api-development.mdc](mdc:.cursor/rules/api-development.mdc))
+- **适用范围**：`app/api/**/*.py`, `app/schemas/**/*.py`
 - **功能**：FastAPI 开发规范，包括路由、数据验证、安全性等
 
-### 6. RAG 系统开发规范 ([rag-development.mdc](mdc:.cursor/rules/rag-development.mdc))
-- **适用范围**：RAG 相关文件 (app/rag/**/*.py, app/rag_tools/**/*.py) - 自动应用
-- **功能**：RAG 系统架构、组件使用和开发最佳实践
-
-### 7. 数据库操作规范 ([database.mdc](mdc:.cursor/rules/database.mdc))
-- **适用范围**：数据库相关文件 (app/models/**/*.py, app/crud/**/*.py, app/core/db.py) - 自动应用
+#### 6. 数据库操作规范 ([database.mdc](mdc:.cursor/rules/database.mdc))
+- **适用范围**：`app/models/**/*.py`, `app/crud/**/*.py`, `app/core/db.py`
 - **功能**：SQLModel ORM 使用、数据模型定义、CRUD 操作规范
 
-### 8. 测试开发规范 ([testing.mdc](mdc:.cursor/rules/testing.mdc))
-- **适用范围**：测试文件 (app/tests/**/*.py, **/test_*.py) - 自动应用
+#### 7. 枚举和数据模式规范 ([enums-schemas.mdc](mdc:.cursor/rules/enums-schemas.mdc))
+- **适用范围**：`app/enums/**/*.py`, `app/schemas/**/*.py`
+- **功能**：枚举定义和 Pydantic 模式最佳实践
+
+### RAG 和 AI 规则
+
+#### 8. RAG 系统开发规范 ([rag-development.mdc](mdc:.cursor/rules/rag-development.mdc))
+- **适用范围**：`app/rag/**/*.py`, `app/rag_tools/**/*.py`
+- **功能**：RAG 系统架构、组件使用和开发最佳实践
+
+### 文档处理规则
+
+#### 9. 文档解析开发规范 ([document-parsing.mdc](mdc:.cursor/rules/document-parsing.mdc))
+- **适用范围**：`app/document_parsing/**/*.py`
+- **功能**：文档解析器开发规范，支持多种文档格式
+
+### 工具和实用程序规则
+
+#### 10. 工具和实用程序开发规范 ([utils-tools.mdc](mdc:.cursor/rules/utils-tools.mdc))
+- **适用范围**：`app/utils/**/*.py`, `app/tools/**/*.py`
+- **功能**：工具函数和实用程序的开发规范
+
+### 测试规则
+
+#### 11. 测试开发规范 ([testing.mdc](mdc:.cursor/rules/testing.mdc))
+- **适用范围**：`app/tests/**/*.py`, `**/test_*.py`
 - **功能**：pytest 测试框架使用、测试组织和最佳实践
+
+### 部署规则
+
+#### 12. 部署和脚本开发规范 ([deployment.mdc](mdc:.cursor/rules/deployment.mdc))
+- **适用范围**：`Dockerfile`, `docker-compose.yml`, `*.yml`, `scripts/**/*.sh`
+- **功能**：Docker 配置和部署脚本开发规范
+
+### Git 工作流规则
+
+#### 13. Git Commit 规范 ([git-commit.mdc](mdc:.cursor/rules/git-commit.mdc))
+- **适用范围**：Agent Requested（通过 description 触发）
+- **功能**：遵循 Conventional Commits 的 commit 信息规范，支持自动生成 commit 和 changelog
 
 ## 使用说明
 
 🎯 **所有规则现已设置为自动应用！**
 
-1. **全局规则**：项目结构指南、包管理工具规范等会自动应用到所有文件
-2. **特定文件规则**：根据文件类型和路径自动匹配相应规则
-3. **智能应用**：AI 助手会根据当前编辑的文件自动应用相关规则
+### 规则应用机制
+
+1. **全局规则（Always Apply）**
+   - 项目结构指南：始终可见，帮助 AI 理解项目布局
+   - 包管理工具规范：始终可见，统一包管理方式
+
+2. **自动匹配规则（Globs）**
+   - 根据文件类型和路径自动匹配
+   - 编辑 Python 文件时自动应用 Python 风格和日志规范
+   - 编辑 API 文件时自动应用 API 开发规范
+   - 编辑测试文件时自动应用测试规范
+   - 编辑 Docker 文件时自动应用部署规范
+
+3. **智能应用**
+   - AI 助手根据当前编辑的文件自动应用相关规则
+   - 多个规则可以同时生效，提供全面的指导
+
+### 规则覆盖范围
+
+```
+MemoMate/
+├── 全局规则（所有文件）
+│   ├── 项目结构指南
+│   └── 包管理工具规范
+├── app/
+│   ├── api/ ..................... API 开发规范
+│   ├── models/ ................. 数据库操作规范
+│   ├── crud/ ................... 数据库操作规范
+│   ├── schemas/ ................ 枚举和数据模式规范
+│   ├── enums/ .................. 枚举和数据模式规范
+│   ├── rag/ .................... RAG 系统开发规范
+│   ├── rag_tools/ .............. RAG 系统开发规范
+│   ├── document_parsing/ ....... 文档解析开发规范
+│   ├── utils/ .................. 工具和实用程序规范
+│   ├── tools/ .................. 工具和实用程序规范
+│   └── tests/ .................. 测试开发规范
+├── scripts/ .................... 部署和脚本规范
+├── Dockerfile .................. 部署和脚本规范
+├── *.yml ....................... 部署和脚本规范
+└── Git Commit .................. Commit 规范（手动触发）
+```
+
+## Git Commit 规范使用
+
+当你需要 AI 帮助生成 commit 信息时：
+1. 直接说："帮我生成 commit 信息"
+2. 使用 `@git-commit` 显式引用规则
+3. 描述改动内容，AI 会自动应用规范生成标准的 commit 信息
 
 ## 规则更新
 
 当项目结构或开发规范发生变化时，请及时更新对应的规则文件，确保 AI 助手能够提供准确的指导。
+
+## 规则编写最佳实践
+
+参考 [cursor-rules-guide.md](mdc:cursor-rules-guide.md) 了解：
+- 规则文件结构
+- 元数据配置
+- Globs 模式匹配
+- 规则生效机制
+- 编写最佳实践

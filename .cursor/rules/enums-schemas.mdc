@@ -1,0 +1,118 @@
+---
+globs: app/enums/**/*.py,app/schemas/**/*.py
+---
+
+# 枚举和数据模式规范
+
+## 枚举定义
+枚举位于 [app/enums/](mdc:app/enums/) 目录：
+- **嵌入枚举**：[embedding.py](mdc:app/enums/embedding.py)
+- **队列枚举**：[queue.py](mdc:app/enums/queue.py)
+- **任务枚举**：[task.py](mdc:app/enums/task.py)
+- **上传枚举**：[upload.py](mdc:app/enums/upload.py)
+
+## 数据模式定义
+数据模式位于 [app/schemas/](mdc:app/schemas/) 目录：
+- **认证模式**：[auth.py](mdc:app/schemas/auth.py)
+- **嵌入模式**：[emb.py](mdc:app/schemas/emb.py)
+- **历史消息模式**：[history.py](mdc:app/schemas/history.py)
+- **LLM 模式**：[llm.py](mdc:app/schemas/llm.py)
+- **解析器模式**：[paser.py](mdc:app/schemas/paser.py)
+- **上传模式**：[upload.py](mdc:app/schemas/upload.py)
+- **用户模式**：[user.py](mdc:app/schemas/user.py)
+
+## 枚举最佳实践
+使用 Python Enum 或 StrEnum 定义枚举：
+```python
+from enum import StrEnum
+
+class TaskStatus(StrEnum):
+    PENDING = "pending"
+    RUNNING = "running"
+    COMPLETED = "completed"
+    FAILED = "failed"
+
+    @classmethod
+    def is_terminal(cls, status: str) -> bool:
+        """检查是否为终态"""
+        return status in {cls.COMPLETED, cls.FAILED}
+```
+
+## Pydantic 模式最佳实践
+```python
+from pydantic import BaseModel, Field, field_validator
+from typing import Optional
+from datetime import datetime
+
+class UserBase(BaseModel):
+    """用户基础模式"""
+    email: str = Field(..., description="用户邮箱", examples=["user@example.com"])
+    full_name: str = Field(..., min_length=1, max_length=100)
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, v: str) -> str:
+        if "@" not in v:
+            raise ValueError("无效的邮箱格式")
+        return v.lower()
+
+class UserCreate(UserBase):
+    """用户创建模式"""
+    password: str = Field(..., min_length=8)
+
+class UserResponse(UserBase):
+    """用户响应模式"""
+    id: int
+    is_active: bool
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+```
+
+## 数据验证规范
+- 使用 Field 定义字段约束
+- 使用 field_validator 自定义验证逻辑
+- 提供清晰的 description 和 examples
+- 使用类型注解确保类型安全
+- 为 API 响应模式设置 `from_attributes = True`
+
+## 模式组织
+- 基础模式（Base）：共享字段
+- 创建模式（Create）：用于创建资源
+- 更新模式（Update）：用于更新资源，字段通常为 Optional
+- 响应模式（Response）：API 返回数据
+- 内部模式（Internal）：仅内部使用
+
+## 示例：完整的模式定义
+```python
+from pydantic import BaseModel, Field
+from typing import Optional
+from datetime import datetime
+from app.enums.task import TaskStatus
+
+# 基础模式
+class TaskBase(BaseModel):
+    title: str = Field(..., min_length=1, max_length=200)
+    description: Optional[str] = None
+
+# 创建模式
+class TaskCreate(TaskBase):
+    pass
+
+# 更新模式
+class TaskUpdate(BaseModel):
+    title: Optional[str] = Field(None, min_length=1, max_length=200)
+    description: Optional[str] = None
+    status: Optional[TaskStatus] = None
+
+# 响应模式
+class TaskResponse(TaskBase):
+    id: int
+    status: TaskStatus
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+```

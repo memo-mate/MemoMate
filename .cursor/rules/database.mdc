@@ -1,5 +1,4 @@
 ---
-alwaysApply: true
 globs: app/models/**/*.py,app/crud/**/*.py,app/core/db.py
 ---
 

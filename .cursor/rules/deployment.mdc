@@ -1,0 +1,73 @@
+---
+globs: Dockerfile,docker-compose.yml,*.yml,scripts/**/*.sh
+description: Docker 和部署脚本开发规范
+---
+
+# 部署和脚本开发规范
+
+## Docker 配置
+- **Dockerfile**：[Dockerfile](mdc:Dockerfile) - 主应用容器配置
+- **Docker Compose**：[docker-compose.yml](mdc:docker-compose.yml) - 多容器编排
+- **Kafka 配置**：[kafka.yml](mdc:kafka.yml) - Kafka 服务配置
+
+## 项目脚本
+位于 [scripts/](mdc:scripts/) 目录：
+- **开发环境**：[dev.sh](mdc:scripts/dev.sh) - 启动开发服务器
+- **代码格式化**：[format.sh](mdc:scripts/format.sh) - 运行代码格式化
+- **代码检查**：[lint.sh](mdc:scripts/lint.sh) - 运行代码检查
+- **测试脚本**：[test.sh](mdc:scripts/test.sh) - 运行测试
+- **测试启动**：[tests-start.sh](mdc:scripts/tests-start.sh) - 启动测试环境
+- **Kafka 主题设置**：[setup_kafka_topics.py](mdc:scripts/setup_kafka_topics.py)
+
+## Shell 脚本最佳实践
+```bash
+#!/usr/bin/env bash
+
+# 设置严格模式
+set -euo pipefail
+
+# 脚本说明
+# 功能：脚本用途描述
+# 使用：./script.sh [参数]
+
+# 变量定义
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+
+# 主函数
+main() {
+    echo "开始执行..."
+    # 业务逻辑
+    echo "执行完成"
+}
+
+# 运行主函数
+main "$@"
+```
+
+## Dockerfile 最佳实践
+- 使用多阶段构建减小镜像体积
+- 固定基础镜像版本
+- 合理使用缓存层
+- 使用 .dockerignore 排除不必要文件
+- 遵循最小权限原则
+
+## Docker Compose 最佳实践
+- 使用环境变量配置
+- 定义健康检查
+- 设置资源限制
+- 使用命名卷管理数据持久化
+- 配置网络隔离
+
+## 部署流程
+1. 运行代码检查：`uv run scripts/lint.sh`
+2. 运行测试：`uv run scripts/test.sh`
+3. 构建 Docker 镜像：`docker build -t memomate:latest .`
+4. 运行容器：`docker-compose up -d`
+5. 验证服务健康状态
+
+## 环境变量管理
+- 敏感信息使用环境变量
+- 不要在代码中硬编码密钥
+- 使用 .env 文件管理本地环境变量（不要提交到 Git）
+- 在 [app/core/config.py](mdc:app/core/config.py) 中统一管理配置

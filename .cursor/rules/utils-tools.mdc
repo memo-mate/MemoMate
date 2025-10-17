@@ -1,0 +1,69 @@
+---
+globs: app/utils/**/*.py,app/tools/**/*.py
+---
+
+# 工具和实用程序开发规范
+
+## 实用程序模块
+实用程序位于 [app/utils/](mdc:app/utils/) 目录：
+- **异步生产者**：[aio_producer.py](mdc:app/utils/aio_producer.py) - Kafka 消息队列
+- **艺术字生成**：[art_name.py](mdc:app/utils/art_name.py)
+- **邮件工具**：[email_tools.py](mdc:app/utils/email_tools.py)
+- **嵌入向量工具**：[emb.py](mdc:app/utils/emb.py)
+- **数学工具**：[math_tools.py](mdc:app/utils/math_tools.py)
+- **模型信息**：[model_info.py](mdc:app/utils/model_info.py)
+- **文本摘要**：[summary.py](mdc:app/utils/summary.py)
+- **时间工具**：[time_tools.py](mdc:app/utils/time_tools.py)
+- **网络搜索摘要**：[web_search_summary.py](mdc:app/utils/web_search_summary.py)
+
+## 工具模块
+工具位于 [app/tools/](mdc:app/tools/) 目录：
+- **网络搜索**：[web_search.py](mdc:app/tools/web_search.py)
+
+## 开发原则
+- 保持函数单一职责
+- 使用类型注解
+- 编写文档字符串
+- 提供使用示例
+- 处理边界情况和异常
+
+## 异步工具开发
+对于耗时操作，使用异步编程：
+```python
+from app.core.log_adapter import logger
+
+async def async_tool(param: str) -> str:
+    try:
+        # 异步操作
+        result = await some_async_operation(param)
+        logger.info("操作成功", param=param)
+        return result
+    except Exception as e:
+        logger.exception("操作失败", param=param, exc_info=e)
+        raise
+```
+
+## 同步工具开发
+对于简单工具，使用同步函数：
+```python
+def simple_tool(input_data: str) -> str:
+    """
+    工具功能描述
+
+    Args:
+        input_data: 输入数据说明
+
+    Returns:
+        返回值说明
+
+    Example:
+        >>> simple_tool("test")
+        'processed test'
+    """
+    return f"processed {input_data}"
+```
+
+## 测试要求
+- 为工具编写单元测试
+- 测试正常和异常情况
+- 使用参数化测试覆盖多种输入

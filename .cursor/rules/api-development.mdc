@@ -1,5 +1,4 @@
 ---
-alwaysApply: true
 globs: app/api/**/*.py,app/schemas/**/*.py
 ---
 

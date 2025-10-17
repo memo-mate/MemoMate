@@ -1,0 +1,289 @@
+---
+description: Git commit 信息生成规范，遵循 Conventional Commits 约定
+---
+
+# Git Commit 规范
+
+## Commit 信息格式
+
+```
+<type>(<scope>): <subject>
+
+<body>
+
+<footer>
+```
+
+### 格式说明
+
+- **type**（必填）：提交类型
+- **scope**（可选）：影响范围
+- **subject**（必填）：简短描述（50 字符以内）
+- **body**（可选）：详细描述
+- **footer**（可选）：破坏性变更或关联 issue
+
+## Type 类型
+
+| 类型       | 说明                   | 示例                                 |
+| ---------- | ---------------------- | ------------------------------------ |
+| `feat`     | 新功能                 | feat(rag): 添加文档重排序功能        |
+| `fix`      | 修复 bug               | fix(api): 修复用户认证失败问题       |
+| `docs`     | 文档更新               | docs(readme): 更新部署说明           |
+| `style`    | 代码格式（不影响功能） | style(api): 格式化代码符合 Ruff 规范 |
+| `refactor` | 重构（不改变功能）     | refactor(database): 优化数据库连接池 |
+| `perf`     | 性能优化               | perf(embedding): 优化向量检索速度    |
+| `test`     | 测试相关               | test(api): 添加用户 API 单元测试     |
+| `chore`    | 构建/工具/依赖         | chore(deps): 升级 FastAPI 到 0.109.0 |
+| `ci`       | CI/CD 相关             | ci(docker): 优化 Docker 构建流程     |
+| `build`    | 构建系统               | build(uv): 更新依赖锁定文件          |
+| `revert`   | 回滚                   | revert: 回滚 feat(rag) 提交          |
+
+## Scope 范围
+
+根据 MemoMate 项目结构，常用的 scope：
+
+### 后端模块
+- `api` - API 路由和接口
+- `auth` - 认证和授权
+- `database` - 数据库操作
+- `models` - 数据模型
+- `schemas` - 数据模式
+
+### 核心功能
+- `rag` - RAG 系统
+- `llm` - LLM 集成
+- `embedding` - 向量嵌入
+- `reranker` - 重排序器
+- `retriever` - 检索器
+
+### 文档处理
+- `parser` - 文档解析
+- `pdf` - PDF 处理
+- `word` - Word 处理
+- `excel` - Excel 处理
+
+### 基础设施
+- `core` - 核心模块
+- `config` - 配置管理
+- `logging` - 日志系统
+- `security` - 安全模块
+- `middleware` - 中间件
+
+### 工具和测试
+- `utils` - 工具函数
+- `tools` - 业务工具
+- `tests` - 测试代码
+- `scripts` - 脚本
+
+### 部署和文档
+- `docker` - Docker 相关
+- `ci` - CI/CD
+- `docs` - 文档
+- `deps` - 依赖管理
+
+## Subject 主题规范
+
+1. **使用中文描述**（方便团队理解）
+2. **使用祈使句**（如：添加、修复、更新）
+3. **不要句号结尾**
+4. **控制在 50 字符以内**
+5. **清晰描述做了什么**
+
+### ✅ 好的 Subject 示例
+```
+feat(rag): 添加多模型检索支持
+fix(auth): 修复 token 过期时间计算错误
+docs(api): 更新 API 文档和使用示例
+refactor(database): 统一数据库会话管理
+perf(embedding): 使用批量嵌入提升性能
+```
+
+### ❌ 不好的 Subject 示例
+```
+feat(rag): add feature.          # 不要用英文 + 句号
+fix: bug                          # 太笼统，没说明什么 bug
+update code                       # 缺少 scope，描述不清晰
+feat(rag): 添加了一个新的功能...  # 太长，描述啰嗦
+```
+
+## Body 正文规范
+
+**可选**，但建议在以下情况提供：
+- 复杂的功能实现
+- 重要的 bug 修复
+- 破坏性变更
+- 需要详细说明的改动
+
+### Body 格式
+1. **与 subject 空一行**
+2. **说明改动的原因和背景**
+3. **说明具体实现方式**
+4. **每行不超过 72 字符**
+
+### 示例
+```
+feat(rag): 添加文档分块策略配置
+
+之前文档分块使用固定大小，对于不同类型的文档效果不佳。
+现在支持按段落、按标题等多种分块策略。
+
+实现方式：
+- 添加 ChunkingStrategy 枚举
+- 实现 ParagraphChunker 和 HeadingChunker
+- 在配置文件中支持策略选择
+```
+
+## Footer 页脚规范
+
+用于以下场景：
+1. **破坏性变更**（BREAKING CHANGE）
+2. **关联 Issue**（Closes #123）
+3. **共同作者**（Co-authored-by）
+
+### 破坏性变更
+```
+feat(api): 更改用户认证响应格式
+
+BREAKING CHANGE: UserResponse 中的 created_at 字段改为 ISO 8601 格式
+之前返回时间戳，现在返回 "2025-10-17T10:30:00Z" 格式
+```
+
+### 关联 Issue
+```
+fix(api): 修复文件上传大小限制
+
+Closes #156
+Fixes #157
+```
+
+## 完整示例
+
+### 简单提交
+```
+feat(rag): 添加向量数据库备份功能
+```
+
+### 带 Body 的提交
+```
+fix(auth): 修复并发请求导致的 token 失效
+
+在高并发场景下，多个请求同时刷新 token 会导致竞态条件。
+
+解决方案：
+- 添加 Redis 分布式锁
+- token 刷新时获取锁，避免并发冲突
+- 设置合理的锁超时时间
+```
+
+### 带 Footer 的提交
+```
+feat(api): 支持流式响应输出
+
+添加了 Server-Sent Events (SSE) 支持，允许 LLM 响应流式输出。
+
+实现：
+- 新增 /api/v1/stream 端点
+- 使用 FastAPI StreamingResponse
+- 支持客户端中断和错误处理
+
+Closes #234
+```
+
+### 破坏性变更
+```
+refactor(database)!: 迁移到 SQLModel 2.0
+
+BREAKING CHANGE:
+- 所有模型需要更新继承方式
+- Session 创建方式改变，需更新所有 CRUD 操作
+- 查询语法有部分变化
+
+迁移指南请参考 docs/migration/sqlmodel-2.0.md
+```
+
+## AI 自动生成 Commit 时的要求
+
+当用户请求生成 commit 信息时：
+
+1. **分析代码变更**
+   - 查看改动的文件和内容
+   - 识别改动属于哪个 type 和 scope
+   - 提取关键改动点
+
+2. **生成规范的 commit**
+   - 使用正确的 type 和 scope
+   - 中文简洁描述主题
+   - 复杂改动添加 body 说明
+   - 破坏性变更必须标注
+
+3. **提供多个选项**
+   - 简洁版（仅 subject）
+   - 详细版（带 body）
+   - 如有需要，提供破坏性变更版本
+
+4. **确保格式正确**
+   - type、scope、subject 格式符合规范
+   - 空行分隔正确
+   - 字符长度符合要求
+
+## Commit 检查清单
+
+生成 commit 前检查：
+- [ ] type 是否正确？
+- [ ] scope 是否准确？
+- [ ] subject 是否清晰简洁？
+- [ ] 是否需要 body 说明？
+- [ ] 是否有破坏性变更？
+- [ ] 是否需要关联 issue？
+- [ ] 格式是否符合规范？
+
+## 常见场景示例
+
+### 新增功能
+```
+feat(rag): 添加多语言文档支持
+feat(api): 实现用户偏好设置接口
+feat(tools): 新增网络搜索工具集成
+```
+
+### Bug 修复
+```
+fix(parser): 修复 PDF 解析中文乱码
+fix(database): 解决连接池泄漏问题
+fix(auth): 修正权限验证逻辑错误
+```
+
+### 文档更新
+```
+docs(readme): 更新快速开始指南
+docs(api): 补充 RAG API 使用文档
+docs(deployment): 添加 Docker 部署说明
+```
+
+### 重构
+```
+refactor(api): 统一错误处理机制
+refactor(rag): 抽象检索器基类
+refactor(tests): 重组测试文件结构
+```
+
+### 性能优化
+```
+perf(embedding): 实现向量缓存机制
+perf(llm): 优化 prompt 模板加载
+perf(database): 添加查询索引
+```
+
+### 测试
+```
+test(api): 添加用户认证集成测试
+test(rag): 补充向量检索单元测试
+test(parser): 增加文档解析边界测试
+```
+
+### 构建和依赖
+```
+chore(deps): 升级 langchain 到 0.1.0
+build(docker): 优化镜像构建层级
+ci(github): 添加自动化测试流程
+```

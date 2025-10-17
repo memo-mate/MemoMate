@@ -1,3 +1,7 @@
+---
+alwaysApply: true
+---
+
 # MemoMate 项目结构指南
 
 ## 项目入口点
@@ -49,7 +53,3 @@ API 路由位于 [app/api/routes/](mdc:app/api/routes/) 目录：
 - API 测试：[app/tests/api/](mdc:app/tests/api/)
 - 核心模块测试：[app/tests/core/](mdc:app/tests/core/)
 - RAG 系统测试：[app/tests/rag/](mdc:app/tests/rag/)
-description:
-globs:
-alwaysApply: false
----

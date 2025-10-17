@@ -1,5 +1,4 @@
 ---
-alwaysApply: true
 globs: app/rag/**/*.py,app/rag_tools/**/*.py
 ---
 
