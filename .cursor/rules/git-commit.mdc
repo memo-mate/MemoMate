@@ -16,27 +16,37 @@ description: Git commit 信息生成规范，遵循 Conventional Commits 约定
 
 ### 格式说明
 
+- **emoji**（可选但推荐）：直观的表情符号
 - **type**（必填）：提交类型
 - **scope**（可选）：影响范围
 - **subject**（必填）：简短描述（50 字符以内）
 - **body**（可选）：详细描述
 - **footer**（可选）：破坏性变更或关联 issue
 
-## Type 类型
+## Type 类型与 Emoji
 
-| 类型       | 说明                   | 示例                                 |
-| ---------- | ---------------------- | ------------------------------------ |
-| `feat`     | 新功能                 | feat(rag): 添加文档重排序功能        |
-| `fix`      | 修复 bug               | fix(api): 修复用户认证失败问题       |
-| `docs`     | 文档更新               | docs(readme): 更新部署说明           |
-| `style`    | 代码格式（不影响功能） | style(api): 格式化代码符合 Ruff 规范 |
-| `refactor` | 重构（不改变功能）     | refactor(database): 优化数据库连接池 |
-| `perf`     | 性能优化               | perf(embedding): 优化向量检索速度    |
-| `test`     | 测试相关               | test(api): 添加用户 API 单元测试     |
-| `chore`    | 构建/工具/依赖         | chore(deps): 升级 FastAPI 到 0.109.0 |
-| `ci`       | CI/CD 相关             | ci(docker): 优化 Docker 构建流程     |
-| `build`    | 构建系统               | build(uv): 更新依赖锁定文件          |
-| `revert`   | 回滚                   | revert: 回滚 feat(rag) 提交          |
+| Emoji | 类型       | 说明                   | 示例                                      |
+| ----- | ---------- | ---------------------- | ----------------------------------------- |
+| ✨     | `feat`     | 新功能                 | ✨ feat(rag): 添加文档重排序功能           |
+| 🐛     | `fix`      | 修复 bug               | 🐛 fix(api): 修复用户认证失败问题          |
+| 📝     | `docs`     | 文档更新               | 📝 docs(readme): 更新部署说明              |
+| 💄     | `style`    | 代码格式（不影响功能） | 💄 style(api): 格式化代码符合 Ruff 规范    |
+| ♻️     | `refactor` | 重构（不改变功能）     | ♻️ refactor(database): 优化数据库连接池    |
+| ⚡️     | `perf`     | 性能优化               | ⚡️ perf(embedding): 优化向量检索速度       |
+| ✅     | `test`     | 测试相关               | ✅ test(api): 添加用户 API 单元测试        |
+| 🔧     | `chore`    | 构建/工具/依赖         | 🔧 chore(deps): 升级 FastAPI 到 0.109.0    |
+| 👷     | `ci`       | CI/CD 相关             | 👷 ci(docker): 优化 Docker 构建流程        |
+| 📦     | `build`    | 构建系统               | 📦 build(uv): 更新依赖锁定文件             |
+| ⏪     | `revert`   | 回滚                   | ⏪ revert: 回滚 feat(rag) 提交             |
+| 💥     | `breaking` | 破坏性变更             | 💥 refactor(api)!: 更改 API 响应格式       |
+| 🎨     | `ui`       | UI/样式更新            | 🎨 style(ui): 优化用户界面布局             |
+| 🔒     | `security` | 安全修复               | 🔒 fix(auth): 修复 XSS 安全漏洞            |
+| 🚀     | `deploy`   | 部署相关               | 🚀 chore(deploy): 更新生产环境配置         |
+| 🔖     | `release`  | 发布版本               | 🔖 release: v1.0.0                         |
+| 🌐     | `i18n`     | 国际化                 | 🌐 feat(i18n): 添加英文语言支持            |
+| 🚑     | `hotfix`   | 紧急修复               | 🚑 fix(critical): 修复生产环境数据丢失问题 |
+| 🗑️     | `remove`   | 删除功能/文件          | 🗑️ chore: 移除废弃的 API 端点              |
+| 🚧     | `wip`      | 进行中的工作           | 🚧 feat(rag): WIP 实现多模态检索           |
 
 ## Scope 范围
 
@@ -83,27 +93,29 @@ description: Git commit 信息生成规范，遵循 Conventional Commits 约定
 
 ## Subject 主题规范
 
-1. **使用中文描述**（方便团队理解）
-2. **使用祈使句**（如：添加、修复、更新）
-3. **不要句号结尾**
-4. **控制在 50 字符以内**
-5. **清晰描述做了什么**
+1. **使用 Emoji 前缀**（快速识别提交类型）
+2. **使用中文描述**（方便团队理解）
+3. **使用祈使句**（如：添加、修复、更新）
+4. **不要句号结尾**
+5. **控制在 50 字符以内**
+6. **清晰描述做了什么**
 
 ### ✅ 好的 Subject 示例
 ```
-feat(rag): 添加多模型检索支持
-fix(auth): 修复 token 过期时间计算错误
-docs(api): 更新 API 文档和使用示例
-refactor(database): 统一数据库会话管理
-perf(embedding): 使用批量嵌入提升性能
+✨ feat(rag): 添加多模型检索支持
+🐛 fix(auth): 修复 token 过期时间计算错误
+📝 docs(api): 更新 API 文档和使用示例
+♻️ refactor(database): 统一数据库会话管理
+⚡️ perf(embedding): 使用批量嵌入提升性能
 ```
 
 ### ❌ 不好的 Subject 示例
 ```
-feat(rag): add feature.          # 不要用英文 + 句号
-fix: bug                          # 太笼统，没说明什么 bug
-update code                       # 缺少 scope，描述不清晰
-feat(rag): 添加了一个新的功能...  # 太长，描述啰嗦
+feat(rag): add feature.                  # 缺少 emoji，使用英文 + 句号
+🐛 fix: bug                              # 太笼统，没说明什么 bug
+update code                              # 缺少 emoji、type、scope
+✨ feat(rag): 添加了一个新的功能...      # 太长，描述啰嗦
+🎉 feat(rag): 添加功能                   # emoji 不匹配（feat 应用 ✨）
 ```
 
 ## Body 正文规范
@@ -122,7 +134,7 @@ feat(rag): 添加了一个新的功能...  # 太长，描述啰嗦
 
 ### 示例
 ```
-feat(rag): 添加文档分块策略配置
+✨ feat(rag): 添加文档分块策略配置
 
 之前文档分块使用固定大小，对于不同类型的文档效果不佳。
 现在支持按段落、按标题等多种分块策略。
@@ -142,7 +154,7 @@ feat(rag): 添加文档分块策略配置
 
 ### 破坏性变更
 ```
-feat(api): 更改用户认证响应格式
+💥 feat(api)!: 更改用户认证响应格式
 
 BREAKING CHANGE: UserResponse 中的 created_at 字段改为 ISO 8601 格式
 之前返回时间戳，现在返回 "2025-10-17T10:30:00Z" 格式
@@ -150,7 +162,7 @@ BREAKING CHANGE: UserResponse 中的 created_at 字段改为 ISO 8601 格式
 
 ### 关联 Issue
 ```
-fix(api): 修复文件上传大小限制
+🐛 fix(api): 修复文件上传大小限制
 
 Closes #156
 Fixes #157
@@ -160,12 +172,12 @@ Fixes #157
 
 ### 简单提交
 ```
-feat(rag): 添加向量数据库备份功能
+✨ feat(rag): 添加向量数据库备份功能
 ```
 
 ### 带 Body 的提交
 ```
-fix(auth): 修复并发请求导致的 token 失效
+🐛 fix(auth): 修复并发请求导致的 token 失效
 
 在高并发场景下，多个请求同时刷新 token 会导致竞态条件。
 
@@ -177,7 +189,7 @@ fix(auth): 修复并发请求导致的 token 失效
 
 ### 带 Footer 的提交
 ```
-feat(api): 支持流式响应输出
+✨ feat(api): 支持流式响应输出
 
 添加了 Server-Sent Events (SSE) 支持，允许 LLM 响应流式输出。
 
@@ -191,7 +203,7 @@ Closes #234
 
 ### 破坏性变更
 ```
-refactor(database)!: 迁移到 SQLModel 2.0
+💥 refactor(database)!: 迁移到 SQLModel 2.0
 
 BREAKING CHANGE:
 - 所有模型需要更新继承方式
@@ -211,17 +223,19 @@ BREAKING CHANGE:
    - 提取关键改动点
 
 2. **生成规范的 commit**
+   - 使用对应的 emoji 前缀
    - 使用正确的 type 和 scope
    - 中文简洁描述主题
    - 复杂改动添加 body 说明
-   - 破坏性变更必须标注
+   - 破坏性变更必须标注并使用 💥 emoji
 
 3. **提供多个选项**
-   - 简洁版（仅 subject）
-   - 详细版（带 body）
-   - 如有需要，提供破坏性变更版本
+   - 简洁版（仅 subject + emoji）
+   - 详细版（带 body + emoji）
+   - 如有需要，提供破坏性变更版本（💥 emoji）
 
 4. **确保格式正确**
+   - emoji 与 type 匹配
    - type、scope、subject 格式符合规范
    - 空行分隔正确
    - 字符长度符合要求
@@ -229,11 +243,12 @@ BREAKING CHANGE:
 ## Commit 检查清单
 
 生成 commit 前检查：
+- [ ] emoji 是否与 type 匹配？
 - [ ] type 是否正确？
 - [ ] scope 是否准确？
 - [ ] subject 是否清晰简洁？
 - [ ] 是否需要 body 说明？
-- [ ] 是否有破坏性变更？
+- [ ] 是否有破坏性变更？（需要 💥）
 - [ ] 是否需要关联 issue？
 - [ ] 格式是否符合规范？
 
@@ -241,49 +256,95 @@ BREAKING CHANGE:
 
 ### 新增功能
 ```
-feat(rag): 添加多语言文档支持
-feat(api): 实现用户偏好设置接口
-feat(tools): 新增网络搜索工具集成
+✨ feat(rag): 添加多语言文档支持
+✨ feat(api): 实现用户偏好设置接口
+✨ feat(tools): 新增网络搜索工具集成
 ```
 
 ### Bug 修复
 ```
-fix(parser): 修复 PDF 解析中文乱码
-fix(database): 解决连接池泄漏问题
-fix(auth): 修正权限验证逻辑错误
+🐛 fix(parser): 修复 PDF 解析中文乱码
+🐛 fix(database): 解决连接池泄漏问题
+🐛 fix(auth): 修正权限验证逻辑错误
+```
+
+### 紧急修复
+```
+🚑 fix(critical): 修复生产环境内存泄漏
+🚑 fix(security): 紧急修复 SQL 注入漏洞
 ```
 
 ### 文档更新
 ```
-docs(readme): 更新快速开始指南
-docs(api): 补充 RAG API 使用文档
-docs(deployment): 添加 Docker 部署说明
+📝 docs(readme): 更新快速开始指南
+📝 docs(api): 补充 RAG API 使用文档
+📝 docs(deployment): 添加 Docker 部署说明
 ```
 
 ### 重构
 ```
-refactor(api): 统一错误处理机制
-refactor(rag): 抽象检索器基类
-refactor(tests): 重组测试文件结构
+♻️ refactor(api): 统一错误处理机制
+♻️ refactor(rag): 抽象检索器基类
+♻️ refactor(tests): 重组测试文件结构
 ```
 
 ### 性能优化
 ```
-perf(embedding): 实现向量缓存机制
-perf(llm): 优化 prompt 模板加载
-perf(database): 添加查询索引
+⚡️ perf(embedding): 实现向量缓存机制
+⚡️ perf(llm): 优化 prompt 模板加载
+⚡️ perf(database): 添加查询索引
 ```
 
 ### 测试
 ```
-test(api): 添加用户认证集成测试
-test(rag): 补充向量检索单元测试
-test(parser): 增加文档解析边界测试
+✅ test(api): 添加用户认证集成测试
+✅ test(rag): 补充向量检索单元测试
+✅ test(parser): 增加文档解析边界测试
 ```
 
 ### 构建和依赖
 ```
-chore(deps): 升级 langchain 到 0.1.0
-build(docker): 优化镜像构建层级
-ci(github): 添加自动化测试流程
+🔧 chore(deps): 升级 langchain 到 0.1.0
+📦 build(docker): 优化镜像构建层级
+👷 ci(github): 添加自动化测试流程
+```
+
+### UI/样式
+```
+🎨 style(ui): 优化主题色彩搭配
+💄 style(api): 格式化代码符合 PEP8
+🎨 feat(ui): 实现深色模式切换
+```
+
+### 安全
+```
+🔒 fix(security): 修复 XSS 漏洞
+🔒 feat(auth): 添加双因素认证
+🔒 chore(deps): 更新存在漏洞的依赖包
+```
+
+### 部署和版本
+```
+🚀 chore(deploy): 更新生产环境配置
+🔖 release: v1.2.0
+📦 build: 优化生产构建体积
+```
+
+### 删除和清理
+```
+🗑️ chore: 移除废弃的 API v1 端点
+🔥 chore: 删除未使用的工具函数
+🗑️ refactor: 清理冗余代码
+```
+
+### 进行中的工作
+```
+🚧 feat(rag): WIP 实现多模态检索
+🚧 refactor(database): 正在迁移到 PostgreSQL
+```
+
+### 国际化
+```
+🌐 feat(i18n): 添加繁体中文支持
+🌐 feat(i18n): 更新英文翻译文案
 ```
