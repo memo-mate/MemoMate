@@ -1,0 +1,9 @@
+{
+  "dependencies": ["."],
+  "graphs": {
+    "rag-agent": "./app/agents/rag_agent.py:rag_graph",
+    "xml-agent": "./app/agents/xml_agent.py:build_xml_agent"
+  },
+  "env": ".env",
+  "image_distro": "wolfi"
+}

@@ -136,7 +136,8 @@ class Settings(BaseSettings):
     # OpenAI API Key
     OPENAI_API_KEY: str = ""
     OPENAI_API_BASE: str = "https://api.openai.com/v1"
-    CHAT_MODEL: str = "gpt-4o-mini"
+    CHAT_MODEL: str = "Pro/deepseek-ai/DeepSeek-V3.2-Exp"
+    MAX_RAG_SESSION_TOKENS: int = 155 * 1000  # 基于模型token限制调整MAX_RAG_TOKENS = 95% * MAX_TOKENS
 
     # Tavily API Key
     TAVILY_API_KEY: str = ""
@@ -181,6 +182,18 @@ class Settings(BaseSettings):
             "deepwiki": {"url": "https://mcp.deepwiki.com/mcp"},
         }
     }
+    XML_DB_PATH: str = "example_data/xml_db.db"
+
+    # 搜索最大文档数
+    SEARCH_MAX_DOCS: int = 20
+    # 重排序最大文档数
+    RERANK_MAX_DOCS: int = 20
+    # 重排序API地址
+    RERANK_BASE_URL: str = "https://api.siliconflow.cn/v1/rerank"
+    # 重排序阈值
+    RERANK_THRESHOLD: float = 0.2
+    # 检索集合名称
+    RAG_COLLECTION_NAME: str = "memomate_dev"
 
 
 settings: Settings = Settings()  # type: ignore

@@ -542,6 +542,58 @@ class QdrantVectorStore(VectorStore):
             for point in result
         ]
 
+    def get_all(self, limit: int | None = None, with_vectors: bool = False) -> list[Document]:
+        """
+        获取集合中的所有文档
+
+        Args:
+            limit: 限制返回的文档数量，None 表示获取所有
+            with_vectors: 是否包含向量数据
+
+        Returns:
+            list[Document]: 文档列表
+        """
+        try:
+            all_points: list[PointStruct] = []
+            offset = None
+            batch_size = 100
+
+            while True:
+                result, next_offset = self.client.scroll(
+                    collection_name=self.collection_name,
+                    limit=batch_size,
+                    offset=offset,
+                    with_payload=True,
+                    with_vectors=with_vectors,
+                )
+                all_points.extend(result)
+
+                # 如果设置了 limit 且已达到，则停止
+                if limit and len(all_points) >= limit:
+                    all_points = all_points[:limit]
+                    break
+
+                if next_offset is None:
+                    break
+                offset = next_offset
+
+            # 转换为 Document 对象
+            documents = [
+                Document(
+                    id=point.id,
+                    page_content=point.payload.get(self.__content_page_key, ""),
+                    metadata=point.payload.get(self.__metadata_key) or {},
+                )
+                for point in all_points
+            ]
+
+            logger.info(f"从集合 {self.collection_name} 获取了 {len(documents)} 个文档")
+            return documents
+
+        except Exception as e:
+            logger.exception("获取所有文档时出错", exc_info=e)
+            return []
+
     def add_texts(
         self, texts: Iterable[str], metadatas: list[dict] | None = None, *, ids: list[str] | None = None, **kwargs: Any
     ) -> list[str]:

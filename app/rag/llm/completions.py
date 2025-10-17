@@ -4,7 +4,8 @@ from typing import Any
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import BaseMessage
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.runnables import RunnableSerializable
+from langchain_core.runnables import RunnableSerializable, RunnableWithFallbacks
+from langchain_core.tools import Tool
 from langchain_ollama import ChatOllama
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel
@@ -93,3 +94,55 @@ class LLM:
     def get_llm(self, params: LLMParams) -> BaseChatModel:
         """获取原始的LLM对象，适用于需要直接使用LLM的场景"""
         return self._create_llm_instance(params)
+
+    def _create_llm_fallback(
+        self,
+        model_names: list[str],
+        api_key: str | None = None,
+        base_url: str | None = None,
+        temperature: float = 0,
+        max_tokens: int | None = None,
+        timeout: int | None = None,
+        tools: list[Tool] | None = None,
+        exceptions_to_handle: tuple[type[BaseException], ...] = (Exception,),
+        exception_key: str | None = None,
+    ) -> RunnableWithFallbacks:
+        if not isinstance(model_names, list) or len(model_names) < 2:
+            raise ValueError("model_names must be a list of at least 2 models")
+
+        _model = ChatOpenAI(
+            model=model_names[0],
+            api_key=api_key,
+            base_url=base_url,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            timeout=timeout,
+        )
+        if tools:
+            _model.bind_tools(tools)
+        return _model.with_fallbacks([_model], exceptions_to_handle=exceptions_to_handle, exception_key=exception_key)
+
+    def get_llm_fallback(
+        self,
+        model_names: list[str],
+        api_key: str | None = settings.OPENAI_API_KEY,
+        base_url: str | None = settings.OPENAI_API_BASE,
+        temperature: float = 0,
+        max_tokens: int | None = None,
+        timeout: int | None = None,
+        tools: list[Tool] | None = None,
+        exceptions_to_handle: tuple[type[BaseException], ...] = (Exception,),
+        exception_key: str | None = None,
+    ) -> RunnableWithFallbacks:
+        """获取带有备选模型的LLM对象，适用于需要使用备选模型的场景"""
+        return self._create_llm_fallback(
+            model_names=model_names,
+            api_key=api_key,
+            base_url=base_url,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            timeout=timeout,
+            tools=tools,
+            exceptions_to_handle=exceptions_to_handle,
+            exception_key=exception_key,
+        )
