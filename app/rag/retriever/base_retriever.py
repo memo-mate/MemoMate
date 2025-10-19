@@ -1,10 +1,11 @@
 from langchain_core.documents import Document
+from langchain_core.embeddings import Embeddings
 
 from app.core import settings
 from app.core.consts import DATA_DIR
 from app.core.log_adapter import logger
 from app.rag.embedding.embedding_db import QdrantVectorStore
-from app.rag.embedding.embeeding_model import MemoMateEmbeddings
+from app.rag.embedding.embeeding_model import EmbeddingFactory
 
 
 class BaseRetriever:
@@ -13,15 +14,13 @@ class BaseRetriever:
     def __init__(
         self,
         collection_name: str = settings.QDRANT_COLLECTION,
-        embedding_model=None,
+        embedding_model: Embeddings | None = None,
         vector_store_url: str | None = None,
         vector_store_api_key: str | None = None,
         vector_store_path: str | None = settings.QDRANT_PATH,
     ):
         # 初始化嵌入模型
-        self.embeddings = embedding_model or MemoMateEmbeddings.openai_embedding(
-            api_key=settings.OPENAI_API_KEY, base_url=settings.OPENAI_API_BASE
-        )
+        self.embeddings = embedding_model or EmbeddingFactory.get()
         # 初始化向量存储
         self.vector_store = QdrantVectorStore(
             collection_name=collection_name,

@@ -10,10 +10,9 @@ from typing import Any
 from langchain_core.documents import Document
 
 from app.core import logger, settings
-from app.enums.embedding import EmbeddingDriverEnum
 from app.plugins.rerank.base import RerankContext, RerankPlugin
 from app.rag.embedding.embedding_db.custom_qdrant import QdrantVectorStore
-from app.rag.embedding.embeeding_model import MemoMateEmbeddings
+from app.rag.embedding.embeeding_model import EmbeddingFactory
 
 
 def get_full_document(vector_store: QdrantVectorStore, doc_id: str) -> list[Document]:
@@ -101,7 +100,7 @@ class XMLAggregationPlugin(RerankPlugin):
             # Get vector store
             vector_store = QdrantVectorStore(
                 collection_name=self.collection_name,
-                embeddings=MemoMateEmbeddings.local_embedding(driver=EmbeddingDriverEnum.MAC),
+                embeddings=EmbeddingFactory.get(),
                 path=settings.QDRANT_PATH,
             )
             logger.debug(

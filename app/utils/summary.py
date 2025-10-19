@@ -6,27 +6,21 @@ from langchain.chains.combine_documents.reduce import (
     acollapse_docs,
     split_list_of_docs,
 )
-from langchain.chat_models import init_chat_model
 from langchain_community.document_loaders import WebBaseLoader
 from langchain_core.documents import Document
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_text_splitters import TokenTextSplitter
-from langgraph.constants import Send
 from langgraph.graph import END, START, StateGraph
+from langgraph.types import Send
 
 from app.core import settings
+from app.rag.llm.completions import LLM, LLMParams
 
 # ==================== 配置 ====================
 
 # 初始化LLM
-llm = init_chat_model(
-    "deepseek-ai/DeepSeek-R1",
-    model_provider="openai",
-    temperature=0,
-    api_key=settings.SILICONFLOW_API_KEY,
-    base_url=settings.SILICONFLOW_API_BASE,
-)
+llm = LLM().get_llm(LLMParams(model_name=settings.CHAT_MODEL))
 
 # ==================== 提示模板 ====================
 map_template = "Write a concise summary of the following text: {context}"

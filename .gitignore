@@ -27,7 +27,9 @@ data/postgres-data
 data/redis-data
 data/pgadmin-data
 bge-*
+.langgraph_api
 database/
+example_data/
 
 # 操作系统和本地环境文件
 .DS_Store

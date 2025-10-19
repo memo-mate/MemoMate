@@ -3,6 +3,21 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 
+class EmbedRequest(BaseModel):
+    """嵌入请求"""
+
+    texts: list[str] = Field(..., description="待嵌入的文本列表", min_length=1)
+    model: str | None = Field(None, description="模型名称")
+    is_query: bool = Field(False, description="是否为查询嵌入（使用不同的嵌入策略）")
+
+
+class EmbedResponse(BaseModel):
+    """嵌入响应"""
+
+    vectors: list[list[float]] = Field(..., description="嵌入向量列表")
+    model: str = Field(..., description="使用的模型名称")
+
+
 class VectorMetadata(BaseModel):
     """向量元数据"""
 

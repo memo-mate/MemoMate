@@ -136,7 +136,7 @@ class Settings(BaseSettings):
     # OpenAI API Key
     OPENAI_API_KEY: str = ""
     OPENAI_API_BASE: str = "https://api.openai.com/v1"
-    CHAT_MODEL: str = "Pro/deepseek-ai/DeepSeek-V3.2-Exp"
+    CHAT_MODEL: str = "gpt-4o-mini"
     MAX_RAG_SESSION_TOKENS: int = 155 * 1000  # 基于模型token限制调整MAX_RAG_TOKENS = 95% * MAX_TOKENS
 
     # Tavily API Key
@@ -148,11 +148,23 @@ class Settings(BaseSettings):
     EMBEDDING_URL: str = ""
     EMBEDDING_DIMENSION: int = 1024
 
-    # Qrant 配置
+    # 向量数据库配置
+    # 支持 qdrant 或 milvus
+    VECTOR_DB_TYPE: str = "qdrant"
+
+    # Qdrant 配置
     QDRANT_URL: str = "http://localhost:6333"
     QDRANT_API_KEY: str | None = None
     QDRANT_COLLECTION: str = "memomate_dev"
     QDRANT_PATH: str = "database/qdrant_db"
+
+    # Milvus 配置
+    MILVUS_HOST: str = "localhost"
+    MILVUS_PORT: int = 19530
+    MILVUS_USER: str = ""
+    MILVUS_PASSWORD: str = ""
+    MILVUS_DB_NAME: str = "default"
+    MILVUS_COLLECTION: str = "memomate_dev"
     # 重排序模块配置
     RERANKER_MODEL: str = "BAAI/bge-reranker-v2-m3"
 
@@ -169,12 +181,6 @@ class Settings(BaseSettings):
 
     # Kafka 配置
     KAFKA_BOOTSTRAP_SERVERS: str = "localhost:9092"
-
-    OPENRUOTER_API_KEY: str = ""
-    OPENROUTER_API_BASE: str = "https://openrouter.ai/api/v1"
-
-    SILICONFLOW_API_KEY: str = ""
-    SILICONFLOW_API_BASE: str = "https://api.siliconflow.cn/"
 
     MCP_CONFIG: dict = {
         "mcpServers": {
@@ -194,6 +200,15 @@ class Settings(BaseSettings):
     RERANK_THRESHOLD: float = 0.2
     # 检索集合名称
     RAG_COLLECTION_NAME: str = "memomate_dev"
+
+    # 嵌入模型配置（OpenAI 兼容 API）
+    # 支持 vLLM、Ollama 或任何 OpenAI 兼容的嵌入服务
+    # vLLM 默认端口: 8000, Ollama 默认端口: 11434
+    EMBEDDING_API_BASE: str = "http://localhost:8000/v1"
+    # 嵌入模型名称（根据实际部署的模型填写）
+    EMBEDDING_MODEL: str = "BAAI/bge-m3"
+    # API Key（可选，vLLM/Ollama 不需要，可填任意值或留空）
+    EMBEDDING_API_KEY: str = "dummy"
 
 
 settings: Settings = Settings()  # type: ignore

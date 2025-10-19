@@ -5,7 +5,7 @@ from app.core import settings
 from app.core.log_adapter import logger
 from app.enums import EmbeddingDriverEnum
 from app.rag.embedding.embedding_db import QdrantVectorStore
-from app.rag.embedding.embeeding_model import MemoMateEmbeddings
+from app.rag.embedding.embeeding_model import _MemoMateEmbeddings
 
 # 本地启动 qdrant 服务
 # docker run -d --name qdrant-server -p 6333:6333 -e QDRANT__API__HTTP_ENABLED=true -e QDRANT__API__HTTP_API_KEY=memo.fastapi qdrant/qdrant
@@ -14,19 +14,19 @@ from app.rag.embedding.embeeding_model import MemoMateEmbeddings
 def get_qdrant_vector_store() -> QdrantVectorStore:
     return QdrantVectorStore(
         collection_name="test",
-        embeddings=MemoMateEmbeddings.local_embedding(driver=EmbeddingDriverEnum.MAC),
+        embeddings=_MemoMateEmbeddings.local_embedding(driver=EmbeddingDriverEnum.MAC),
         path=settings.QDRANT_PATH,
     )
 
 
 def test_local_embedding():
-    embedding: Embeddings = MemoMateEmbeddings.local_embedding()
+    embedding: Embeddings = _MemoMateEmbeddings.local_embedding()
     embedding = embedding.embed_documents(["Hello, world!"])
     assert len(embedding) == 1
 
 
 def test_openai_embedding():
-    embedding: Embeddings = MemoMateEmbeddings.openai_embedding(model_name="")
+    embedding: Embeddings = _MemoMateEmbeddings.openai_embedding(model_name="")
     embedding = embedding.embed_documents(["Hello, world!"])
     assert len(embedding) == 1
     assert len(embedding[0]) == 1024

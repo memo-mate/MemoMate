@@ -9,7 +9,6 @@ from langchain.chains.combine_documents.reduce import (
     acollapse_docs,
     split_list_of_docs,
 )
-from langchain.chat_models import init_chat_model
 from langchain_community.document_loaders import (
     CSVLoader,
     Docx2txtLoader,
@@ -30,6 +29,7 @@ from pydantic import BaseModel, Field
 
 from app.core import settings
 from app.core.log_adapter import logger
+from app.rag.llm.completions import LLM, LLMParams
 
 # ==================== 异常定义 ====================
 
@@ -78,24 +78,6 @@ class ProcessingConfig(BaseModel):
     enable_cache: bool = Field(default=True, description="是否启用缓存")
     enable_human_review: bool = Field(default=False, description="是否需要人工审核")
     interactive_review: bool = Field(default=False, description="是否启用交互式审核（命令行输入）")
-
-
-# ==================== LLM 初始化 ====================
-
-
-def create_llm(config: ProcessingConfig):
-    """创建LLM实例"""
-    try:
-        return init_chat_model(
-            "deepseek-ai/DeepSeek-R1",
-            model_provider="openai",
-            temperature=config.temperature,
-            api_key=settings.SILICONFLOW_API_KEY,
-            base_url=settings.SILICONFLOW_API_BASE,
-        )
-    except Exception as e:
-        logger.exception("初始化LLM失败", exc_info=e)
-        raise
 
 
 # ==================== 提示模板策略 ====================
@@ -245,7 +227,7 @@ class WebSearchProcessor:
 
     def __init__(self, config: ProcessingConfig = None):
         self.config = config or ProcessingConfig()
-        self.llm = create_llm(self.config)
+        self.llm = LLM().get_llm(LLMParams(model_name=settings.CHAT_MODEL))
         self.strategy_map = {
             SummaryStrategy.CONCISE: ConciseStrategy(),
             SummaryStrategy.DETAILED: DetailedStrategy(),

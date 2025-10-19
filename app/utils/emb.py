@@ -4,7 +4,7 @@ from qdrant_client.http.models import Filter
 from app.core.config import settings
 from app.core.log_adapter import logger
 from app.rag.embedding.embedding_db import QdrantVectorStore
-from app.rag.embedding.embeeding_model import MemoMateEmbeddings
+from app.rag.embedding.embeeding_model import EmbeddingFactory
 
 
 def get_vector_store(collection_name: str) -> QdrantVectorStore:
@@ -20,9 +20,7 @@ def get_vector_store(collection_name: str) -> QdrantVectorStore:
         HTTPException: 创建向量存储实例失败时抛出
     """
     try:
-        embedding_model = MemoMateEmbeddings.openai_embedding(
-            api_key=settings.OPENAI_API_KEY, base_url=settings.OPENAI_API_BASE, model_name=settings.EMBEDDING_MODEL
-        )
+        embedding_model = EmbeddingFactory.get()
 
         vector_store = QdrantVectorStore(
             collection_name=collection_name,

@@ -3,7 +3,7 @@ name = "MemoMate"
 version = "0.1.0"
 description = "MemoMate is a RAG application that allows you to manage your notes and tasks."
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.12,<3.13"
 dependencies = [
     "httpx[socks]>=0.28.1",
     "huggingface-hub>=0.29.1",
@@ -42,7 +42,7 @@ dependencies = [
     "redis[hiredis]>=5.2.1",
     "pillow>=11.1.0",
     "qdrant-client>=1.12.1",
-    "sse-starlette>=2.2.1",
+    "sse-starlette>=2.1.0,<2.2.0",
     "websockets>=15.0.1",
     "faster-whisper>=1.1.1",
     "chromadb>=1.0.8",
@@ -58,6 +58,7 @@ dependencies = [
     "langchain-mcp-adapters>=0.1.11",
     "langgraph-supervisor>=0.0.29",
     "jieba3>=1.0.2",
+    "langgraph-cli[inmem]>=0.4.4",
 ]
 
 [dependency-groups]

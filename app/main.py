@@ -5,6 +5,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 from app.api.main import api_router
 from app.core.config import settings
+from app.core.log_adapter import logger
 from app.core.responses import CustomORJSONResponse
 from app.core.sessions import SessionFactory
 from app.utils.aio_producer import AIOProducer
@@ -17,8 +18,19 @@ def custom_generate_unique_id(route: APIRoute) -> str:
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
+    # 初始化 Kafka Producer
     SessionFactory.aio_producer = AIOProducer({"bootstrap.servers": settings.KAFKA_BOOTSTRAP_SERVERS})
+
+    # 记录嵌入服务配置
+    logger.info(
+        "Embedding service configured",
+        api_base=settings.EMBEDDING_API_BASE,
+        model=settings.EMBEDDING_MODEL,
+    )
+
     yield
+
+    # 清理资源
     SessionFactory.get_aio_producer().close()
 
 

@@ -1,0 +1,140 @@
+# Ollama 嵌入服务部署配置
+#
+# 使用 Ollama 部署嵌入模型，解决多进程重复加载问题
+#
+# 使用方式:
+#   docker-compose -f docker-compose.yml -f docker-compose.ollama.yml up -d
+#
+# 架构:
+#   ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+#   │  Backend 1  │────▶│   Ollama    │◀────│  Backend 2  │
+#   │  (workers)  │     │  Embedding  │     │  (workers)  │
+#   └─────────────┘     │   Service   │     └─────────────┘
+#                       └─────────────┘
+#
+# 优势:
+#   - 模型只加载一次，所有应用实例共享
+#   - Ollama 管理简单，自动下载模型
+#   - 支持多 worker，无需担心重复加载
+#   - 提供 Web UI 管理模型
+
+x-restart: &restart_policy
+  restart: unless-stopped
+  deploy:
+    restart_policy:
+      condition: on-failure
+      delay: 60s
+
+services:
+  # Ollama 嵌入服务
+  ollama:
+    <<: *restart_policy
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ./data/ollama:/root/.ollama
+    deploy:
+      resources:
+        limits:
+          memory: 8G
+        reservations:
+          memory: 4G
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Ollama Web UI（可选）
+  ollama-webui:
+    <<: *restart_policy
+    image: ghcr.io/open-webui/open-webui:main
+    ports:
+      - "3000:8080"
+    environment:
+      - OLLAMA_BASE_URLS=http://ollama:11434
+      - WEBUI_SECRET_KEY=${OLLAMA_WEBUI_SECRET:-change-me}
+    volumes:
+      - ./data/ollama-webui:/app/backend/data
+    depends_on:
+      - ollama
+    deploy:
+      replicas: 0  # 默认不启动，需要时设置为 1
+
+  # 后端服务（使用 Ollama 嵌入）
+  backend:
+    <<: *restart_policy
+    image: memo/memo-fastapi-backend:latest
+    env_file:
+      - .env
+    # 可以使用多 worker，因为不需要加载模型
+    entrypoint: ["fastapi", "run", "--workers", "4", "app/main.py"]
+    environment:
+      # 配置使用 Ollama 嵌入服务
+      - EMBEDDING_API_BASE=http://ollama:11434/v1
+      - EMBEDDING_MODEL=bge-m3
+      - EMBEDDING_API_KEY=dummy
+    depends_on:
+      - redis
+      - postgres
+      - ollama
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 512M
+
+  redis:
+    <<: *restart_policy
+    image: redis:latest
+    env_file:
+      - .env
+    command: >
+      redis-server
+      --bind 0.0.0.0
+      --requirepass $REDIS_PASSWORD
+      --appendonly yes
+      --rename-command KEYS ""
+    volumes:
+      - ./data/redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-h", "localhost", "-p", "6379", "-a", "$REDIS_PASSWORD", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres:
+    <<: *restart_policy
+    image: postgres:16.3
+    env_file:
+      - .env
+    environment:
+      - TZ=Asia/Shanghai
+      - POSTGRES_SERVER=db
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - ./data/postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  qdrant:
+    <<: *restart_policy
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"
+    environment:
+      - TZ=Asia/Shanghai
+    volumes:
+      - ./qdrant_storage:/qdrant/storage

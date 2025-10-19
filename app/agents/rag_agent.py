@@ -31,10 +31,9 @@ from langgraph.types import Checkpointer
 
 from app import prompts
 from app.core import logger, settings
-from app.enums.embedding import EmbeddingDriverEnum
 from app.plugins.rerank.service import rerank_documents
 from app.rag.embedding.embedding_db.custom_qdrant import QdrantVectorStore
-from app.rag.embedding.embeeding_model import MemoMateEmbeddings
+from app.rag.embedding.embeeding_model import EmbeddingFactory
 from app.rag.llm.completions import LLM, LLMParams
 
 trimmer: Runnable = trim_messages(
@@ -55,7 +54,7 @@ def hybrid_search(query: str, k: int = 5) -> list[Document]:
     # Create vector store instance
     vector_store = QdrantVectorStore(
         collection_name=settings.RAG_COLLECTION_NAME,
-        embeddings=MemoMateEmbeddings.local_embedding(driver=EmbeddingDriverEnum.MAC),
+        embeddings=EmbeddingFactory.get(),
         path=settings.QDRANT_PATH,
     )
 

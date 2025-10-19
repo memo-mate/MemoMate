@@ -88,7 +88,7 @@ def custom_tool_error_handler(error: Exception) -> str:
     return f"❌ 工具执行错误: {error_msg}\n请检查参数或查询 context7 文档。"
 
 
-def should_continue(state: DuckDBState, config: RunnableConfig) -> str:
+def should_continue(state: DuckDBState, config: RunnableConfig) -> str:  # noqa
     """判断是否继续执行."""
     # 使用 tools_condition 判断是否有工具调用
     return tools_condition(state)
@@ -194,7 +194,7 @@ async def build_xml_agent() -> CompiledStateGraph:
 
     assistant_agent = create_supervisor(
         agents=[rag_agent, echart_agent, duckdb_agent],
-        model=LLM().get_llm(LLMParams(model_name=settings.CHAT_MODEL)),
+        model=LLM().get_llm(LLMParams(model_name=settings.CHAT_MODEL, temperature=0.3)),
         supervisor_name="supervisor_xml_agent",
         state_schema=ChartRAGState,
         tools=[
@@ -211,10 +211,10 @@ async def build_xml_agent() -> CompiledStateGraph:
             create_handoff_tool(
                 agent_name="duckdb_agent",
                 name="assign_to_duckdb_agent",
-                description="Transfer to DuckDB agent to query and analyze structured data. Use this for: statistical queries (counts, sums, averages), data aggregation and grouping, numerical calculations, filtering and sorting data, or any questions requiring database queries. Examples: '有多少个检验批', '统计各类型的数量', '计算总金额'.",
+                description="Transfer to DuckDB agent to query and analyze structured data. Use this for: statistical queries (counts, sums, averages), data aggregation and grouping, numerical calculations, filtering and sorting data, or any questions requiring database queries. ",
             ),
         ],
-        prompt=prompts.XML_SUPERVISOR_PROMPT_V1,
+        prompt=prompts.XML_SUPERVISOR_SYSTEM_PROMPT,
         output_mode="last_message",
         add_handoff_messages=False,
         add_handoff_back_messages=False,
