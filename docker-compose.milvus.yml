@@ -102,66 +102,67 @@ services:
       replicas: 1  # 默认启动，不需要时设置为 0
 
   # 后端服务（使用 Milvus）
-  backend:
-    <<: *restart_policy
-    image: memo/memo-fastapi-backend:latest
-    env_file:
-      - .env
-    entrypoint: ["fastapi", "run", "--workers", "4", "app/main.py"]
-    environment:
-      # 配置使用 Milvus
-      - VECTOR_DB_TYPE=milvus
-      - MILVUS_HOST=milvus
-      - MILVUS_PORT=19530
-      - MILVUS_USER=
-      - MILVUS_PASSWORD=
-      - MILVUS_DB_NAME=default
-    depends_on:
-      - redis
-      - postgres
-      - milvus
-    deploy:
-      resources:
-        limits:
-          memory: 2G
-        reservations:
-          memory: 512M
+  # backend:
+  #   <<: *restart_policy
+  #   image: memo/memo-fastapi-backend:latest
+  #   env_file:
+  #     - .env
+  #   entrypoint: ["fastapi", "run", "--workers", "4", "app/main.py"]
+  #   environment:
+  #     # 配置使用 Milvus
+  #     - VECTOR_DB_TYPE=milvus
+  #     - MILVUS_HOST=milvus
+  #     - MILVUS_PORT=19530
+  #     - MILVUS_USER=
+  #     - MILVUS_PASSWORD=
+  #     - MILVUS_DB_NAME=default
+  #   depends_on:
+  #     - redis
+  #     - postgres
+  #     - milvus
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         memory: 2G
+  #       reservations:
+  #         memory: 512M
+  # 暂时用不上
+  # redis:
+  #   <<: *restart_policy
+  #   image: redis:latest
+  #   env_file:
+  #     - .env
+  #   command: >
+  #     redis-server
+  #     --bind 0.0.0.0
+  #     --requirepass $REDIS_PASSWORD
+  #     --appendonly yes
+  #     --rename-command KEYS ""
+  #   volumes:
+  #     - ./data/redis-data:/data
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "-h", "localhost", "-p", "6379", "-a", "$REDIS_PASSWORD", "ping"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
 
-  redis:
-    <<: *restart_policy
-    image: redis:latest
-    env_file:
-      - .env
-    command: >
-      redis-server
-      --bind 0.0.0.0
-      --requirepass $REDIS_PASSWORD
-      --appendonly yes
-      --rename-command KEYS ""
-    volumes:
-      - ./data/redis-data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "-h", "localhost", "-p", "6379", "-a", "$REDIS_PASSWORD", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  postgres:
-    <<: *restart_policy
-    image: postgres:16.3
-    env_file:
-      - .env
-    environment:
-      - TZ=Asia/Shanghai
-      - POSTGRES_SERVER=db
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_DB}
-      - PGDATA=/var/lib/postgresql/data/pgdata
-    volumes:
-      - ./data/postgres-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
+  # 后续使用
+  # postgres:
+  #   <<: *restart_policy
+  #   image: postgres:16.3
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     - TZ=Asia/Shanghai
+  #     - POSTGRES_SERVER=db
+  #     - POSTGRES_USER=${POSTGRES_USER}
+  #     - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+  #     - POSTGRES_DB=${POSTGRES_DB}
+  #     - PGDATA=/var/lib/postgresql/data/pgdata
+  #   volumes:
+  #     - ./data/postgres-data:/var/lib/postgresql/data
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER"]
+  #     interval: 5s
+  #     timeout: 5s
+  #     retries: 10
