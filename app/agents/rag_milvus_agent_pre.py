@@ -1,12 +1,4 @@
-"""Enhanced Milvus RAG Agent with rerank, deduplication, and comprehensive logging.
-
-This module implements a production-ready RAG agent that combines:
-- Milvus hybrid search (BM25 + vector retrieval)
-- Document reranking with fallback strategies
-- Document deduplication
-- Structured logging
-- Error handling and retry mechanisms
-"""
+"""Enhanced Milvus RAG Agent with hybrid search, reranking, and deduplication."""
 
 import json
 import re
@@ -14,9 +6,9 @@ from typing import Literal, NotRequired
 
 import httpx
 import tenacity
-from langchain.tools.retriever import create_retriever_tool
+from langchain_classic.tools.retriever import create_retriever_tool
 from langchain_core.documents import Document
-from langchain_core.messages import BaseMessage, HumanMessage
+from langchain_core.messages import BaseMessage, HumanMessage, ToolMessage
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_milvus import BM25BuiltInFunction, Milvus
@@ -35,26 +27,13 @@ from app.rag.llm import LLM
 
 logger = get_logger(__name__)
 
-# ============================================================================
-# State Definition
-# ============================================================================
-
 
 class EnhancedRagState(MessagesState):
-    """Enhanced RAG state with document tracking.
-
-    Extends MessagesState with:
-    - context: Reranked and filtered documents for generation
-    - retrieved_docs: Original retrieved documents before reranking
-    """
+    """Enhanced RAG state with document tracking."""
 
     context: NotRequired[list[Document]]
     retrieved_docs: NotRequired[list[Document]]
 
-
-# ============================================================================
-# Milvus Setup
-# ============================================================================
 
 logger.info(
     "Initializing Milvus vector store",
@@ -73,10 +52,10 @@ vectorstore = Milvus(
     drop_old=False,  # Drop the old Milvus collection if it exists
     # partition_key_field="namespace",  # Use the "namespace" field as the partition key
     auto_id=True,
+    enable_dynamic_field=True,  # 动态字段
 )
 llm: ChatOpenAI = LLM().get_llm()
 
-# Create retriever with hybrid search (BM25 + vector)
 retriever = vectorstore.as_retriever(
     search_kwargs={
         "k": settings.SEARCH_MAX_DOCS,
@@ -85,51 +64,31 @@ retriever = vectorstore.as_retriever(
     }
 )
 
-# Create retriever tool for LangGraph
 retriever_tool = create_retriever_tool(
     retriever,
     "retrieve_documents",
     "Search and retrieve relevant documents from the knowledge base. "
     "Use this tool when you need to answer questions based on stored information.",
+    response_format="content_and_artifact",
 )
 
 logger.info("Milvus RAG agent initialized successfully")
 
-# ============================================================================
-# Helper Functions
-# ============================================================================
-
 
 def clean_text(text: str) -> str:
-    """Clean text by removing OCR artifacts and extra spaces.
-
-    Args:
-        text: Text to clean
-
-    Returns:
-        Cleaned text
-    """
+    """Clean text by removing OCR artifacts and extra spaces."""
     return re.sub(r"\(cid:\d+\)", "", text).replace("  ", " ").strip()
 
 
 def get_latest_user_message(messages: list[BaseMessage]) -> str:
-    """Extract the latest user message from the messages list.
-
-    Args:
-        messages: List of messages in the conversation
-
-    Returns:
-        Latest user message content
-    """
+    """Extract the latest user message from the messages list."""
     for message in reversed(messages):
         if isinstance(message, HumanMessage):
             if isinstance(message.content, str):
                 return message.content
-            # Handle multimodal content
             for item in message.content:
                 if isinstance(item, dict) and item.get("type") == "text":
                     return item.get("text", "")
-    # Fallback to last message
     if messages:
         last_msg = messages[-1]
         if isinstance(last_msg.content, str):
@@ -141,15 +100,7 @@ def deduplicate_documents(
     docs: list[Document],
     mode: Literal["content", "content+metadata"] = "content",
 ) -> list[Document]:
-    """Remove duplicate documents based on content or content+metadata.
-
-    Args:
-        docs: List of documents to deduplicate
-        mode: Deduplication mode - 'content' or 'content+metadata'
-
-    Returns:
-        Deduplicated list of documents
-    """
+    """Remove duplicate documents."""
     seen = set()
     unique_docs = []
 
@@ -175,18 +126,10 @@ def deduplicate_documents(
 
 
 def build_context_with_metadata(docs: list[Document]) -> str:
-    """Build context text with document metadata and sources.
-
-    Args:
-        docs: List of documents to format
-
-    Returns:
-        Formatted context string
-    """
+    """Build context text with metadata and sources."""
     context_parts = []
 
     for i, doc in enumerate(docs, 1):
-        # Build source info
         source_info = ""
         if doc.metadata:
             source = doc.metadata.get("source", "")
@@ -197,10 +140,8 @@ def build_context_with_metadata(docs: list[Document]) -> str:
                     source_info += f"，时间：{timestamp}"
                 source_info += "）"
 
-        # Build metadata info (exclude internal fields)
         metadata_info = ""
         if doc.metadata:
-            # Remove internal/irrelevant fields
             filtered_metadata = {
                 k: v
                 for k, v in doc.metadata.items()
@@ -216,16 +157,10 @@ def build_context_with_metadata(docs: list[Document]) -> str:
             if filtered_metadata:
                 metadata_info = f"\n元数据: {json.dumps(filtered_metadata, ensure_ascii=False)}"
 
-        # Clean and format content
         content = clean_text(doc.page_content)
         context_parts.append(f"文档{i}{source_info}：\n{content}{metadata_info}")
 
     return "\n\n".join(context_parts)
-
-
-# ============================================================================
-# Rerank with Retry and Fallback
-# ============================================================================
 
 
 @tenacity.retry(
@@ -239,28 +174,15 @@ def fetch_rerank_api(
     top_n: int = 10,
     timeout: int = 300,
 ) -> dict:
-    """Fetch rerank API with retry mechanism.
-
-    Args:
-        query: Query string
-        documents: List of document texts
-        top_n: Number of top results to return
-        timeout: Request timeout in seconds
-
-    Returns:
-        Rerank API response
-
-    Raises:
-        Exception: If API call fails
-    """
+    """Fetch rerank API with retry."""
     url = settings.RERANK_BASE_URL
     headers = {
-        "Authorization": f"Bearer {settings.API_KEY}",
+        "Authorization": f"Bearer {settings.OPENAI_API_KEY}",
         "Content-Type": "application/json",
     }
 
     payload = {
-        "model": settings.RERANK_MODEL,
+        "model": settings.RERANKER_MODEL,
         "query": query,
         "documents": documents,
         "top_n": top_n,
@@ -276,75 +198,39 @@ def fetch_rerank_api(
         raise Exception(f"Rerank API Error: {response.text}")
 
 
-# ============================================================================
-# Graph Nodes
-# ============================================================================
-
-
 class GradeDocuments(BaseModel):
-    """Binary score for relevance check on retrieved documents."""
+    """Binary score for relevance check."""
 
     binary_score: str = Field(description="Documents are relevant to the question, 'yes' or 'no'")
 
 
 def generate_query_or_respond(state: EnhancedRagState) -> dict:
-    """Decide whether to retrieve information or respond directly.
-
-    Args:
-        state: Current graph state with messages
-
-    Returns:
-        Updated state with the model's response
-    """
+    """Decide whether to retrieve or respond directly."""
     logger.info("Evaluating query - deciding whether to retrieve or respond directly")
     response = llm.bind_tools([retriever_tool]).invoke(state["messages"])
     return {"messages": [response]}
 
 
-def extract_documents_from_tool_response(state: EnhancedRagState) -> list[Document]:
-    """Extract documents from tool response in messages.
+def extract_artifacts_to_state(state: EnhancedRagState) -> dict:
+    """Extract Document artifacts from ToolMessage and store in state."""
+    for message in reversed(state["messages"]):
+        if isinstance(message, ToolMessage) and hasattr(message, "artifact") and message.artifact:
+            docs = message.artifact
+            logger.info(
+                "Extracted documents from current retrieval (replaces previous)",
+                doc_count=len(docs) if isinstance(docs, list) else 0,
+                tool_name=message.name,
+            )
+            return {"retrieved_docs": docs if isinstance(docs, list) else []}
 
-    The ToolNode calls the retriever and returns results as string content.
-    We need to reconstruct Document objects from this.
-
-    Args:
-        state: Current graph state with messages
-
-    Returns:
-        List of retrieved documents
-    """
-    # The retriever returns documents which are converted to string by ToolNode
-    # We'll use the retriever directly to get proper Document objects
-    question = get_latest_user_message(state["messages"])
-
-    try:
-        # Invoke retriever directly to get Document objects
-        docs = retriever.invoke(question)
-        logger.info("Documents retrieved successfully", doc_count=len(docs))
-        return docs if isinstance(docs, list) else []
-    except Exception as e:
-        logger.error("Failed to retrieve documents", error=str(e))
-        return []
+    logger.warning("No ToolMessage with artifacts found, clearing retrieved_docs")
+    return {"retrieved_docs": []}
 
 
 def rerank_documents_node(state: EnhancedRagState) -> dict:
-    """Rerank retrieved documents with multiple fallback strategies.
-
-    Strategy:
-    1. Try plugin-based reranking
-    2. Fallback to direct API call
-    3. Fallback to top-N original documents
-
-    Args:
-        state: Current graph state with messages
-
-    Returns:
-        Updated state with context (reranked docs)
-    """
+    """Rerank retrieved documents with fallback strategies."""
     question = get_latest_user_message(state["messages"])
-
-    # Extract documents from the retriever
-    retrieved_docs = extract_documents_from_tool_response(state)
+    retrieved_docs = state.get("retrieved_docs", [])
 
     logger.info("Starting document reranking", doc_count=len(retrieved_docs), question=question[:100])
 
@@ -352,10 +238,8 @@ def rerank_documents_node(state: EnhancedRagState) -> dict:
         logger.warning("No documents to rerank")
         return {"context": [], "retrieved_docs": []}
 
-    # Deduplicate first
     retrieved_docs = deduplicate_documents(retrieved_docs)
 
-    # Strategy 1: Try plugin-based reranking
     try:
         reranked_docs = rerank_documents(
             query=question,
@@ -364,7 +248,6 @@ def rerank_documents_node(state: EnhancedRagState) -> dict:
             metadata={"source": "milvus_hybrid"},
         )
 
-        # Apply threshold filtering
         reranked_docs = [
             doc for doc in reranked_docs if doc.metadata.get("relevance_score", 0) >= settings.RERANK_THRESHOLD
         ]
@@ -375,7 +258,6 @@ def rerank_documents_node(state: EnhancedRagState) -> dict:
     except Exception as e:
         logger.error("Plugin rerank failed, trying direct API", error=str(e))
 
-    # Strategy 2: Fallback to direct API call
     try:
         documents_str = [doc.page_content for doc in retrieved_docs]
         scores_results = fetch_rerank_api(question, documents_str, top_n=settings.RERANK_MAX_DOCS)
@@ -398,21 +280,13 @@ def rerank_documents_node(state: EnhancedRagState) -> dict:
     except Exception as fallback_error:
         logger.error("Direct API rerank also failed, using original documents", error=str(fallback_error))
 
-    # Strategy 3: Final fallback - return top-N original documents
     fallback_docs = retrieved_docs[: settings.RERANK_MAX_DOCS]
     logger.warning("Using fallback strategy", doc_count=len(fallback_docs))
     return {"context": fallback_docs, "retrieved_docs": retrieved_docs}
 
 
 def grade_documents(state: EnhancedRagState) -> Literal["generate", "rewrite"]:
-    """Determine whether the retrieved documents are relevant to the question.
-
-    Args:
-        state: Current graph state with context
-
-    Returns:
-        Decision to generate answer or rewrite question
-    """
+    """Determine document relevance."""
     logger.info("Grading document relevance")
 
     question = get_latest_user_message(state["messages"])
@@ -422,13 +296,10 @@ def grade_documents(state: EnhancedRagState) -> Literal["generate", "rewrite"]:
         logger.warning("No documents in context, will rewrite query")
         return "rewrite"
 
-    # Build context for grading
     docs_text = "\n\n".join([f"Document {i + 1}: {doc.page_content[:200]}..." for i, doc in enumerate(docs[:3])])
 
-    # Create structured LLM grader
     structured_llm_grader = llm.with_structured_output(GradeDocuments)
 
-    # Grade prompt
     grade_prompt = f"""You are a grader assessing relevance of retrieved documents to a user question.
 
     Retrieved documents:
@@ -455,14 +326,7 @@ def grade_documents(state: EnhancedRagState) -> Literal["generate", "rewrite"]:
 
 
 def rewrite_question(state: EnhancedRagState) -> dict:
-    """Transform the query to produce a better question.
-
-    Args:
-        state: Current graph state with messages
-
-    Returns:
-        Updated state with rewritten question
-    """
+    """Transform query for better retrieval."""
     logger.info("Rewriting query for better retrieval")
 
     question = get_latest_user_message(state["messages"])
@@ -483,14 +347,7 @@ def rewrite_question(state: EnhancedRagState) -> dict:
 
 
 def generate(state: EnhancedRagState) -> dict:
-    """Generate answer based on retrieved and reranked documents.
-
-    Args:
-        state: Current graph state with context
-
-    Returns:
-        Updated state with generated answer
-    """
+    """Generate answer from context."""
     logger.info("Generating answer from context")
 
     question = get_latest_user_message(state["messages"])
@@ -498,11 +355,9 @@ def generate(state: EnhancedRagState) -> dict:
 
     if not docs:
         logger.warning("No context documents for generation")
-        # Generate without context
         response = llm.invoke([{"role": "user", "content": question}])
         return {"messages": [response]}
 
-    # Build rich context with metadata
     context_text = build_context_with_metadata(docs)
 
     logger.info(
@@ -512,7 +367,6 @@ def generate(state: EnhancedRagState) -> dict:
         context_length=len(context_text),
     )
 
-    # Use RAG prompt template
     prompt = ChatPromptTemplate.from_messages(
         [
             ("system", prompts.RAG_PROMPT),
@@ -521,15 +375,12 @@ def generate(state: EnhancedRagState) -> dict:
         ]
     )
 
-    # Build prompt input
     prompt_input = {
         "context": context_text,
         "question": question,
-        "system_time": "",  # Can add time context if needed
-        "history": state.get("messages", [])[:-1],  # Exclude current question
+        "system_time": "",
+        "history": state.get("messages", [])[:-1],
     }
-
-    # Generate answer
     try:
         chain = prompt | llm | StrOutputParser()
         answer = chain.invoke(prompt_input)
@@ -541,69 +392,41 @@ def generate(state: EnhancedRagState) -> dict:
     return {"messages": [{"role": "assistant", "content": answer.strip()}]}
 
 
-# ============================================================================
-# Graph Construction
-# ============================================================================
-
-
 def create_enhanced_rag_graph(
     checkpointer: Checkpointer | None = None,
     name: str = "milvus_rag_agent_pre",
 ):
-    """Create enhanced RAG graph with Milvus hybrid search and reranking.
-
-    Args:
-        checkpointer: Optional checkpointer for conversation memory
-        name: Name of the compiled graph
-
-    Returns:
-        Compiled LangGraph workflow
-    """
+    """Create enhanced RAG graph."""
     logger.info("Building enhanced RAG graph", graph_name=name)
 
     workflow = StateGraph(EnhancedRagState)
 
-    # Add nodes
     workflow.add_node("generate_query_or_respond", generate_query_or_respond)
     workflow.add_node("retrieve", ToolNode([retriever_tool]))
+    workflow.add_node("extract_artifacts", extract_artifacts_to_state)
     workflow.add_node("rerank", rerank_documents_node)
     workflow.add_node("grade", grade_documents)
     workflow.add_node("rewrite", rewrite_question)
     workflow.add_node("generate", generate)
-
-    # Build workflow
     workflow.add_edge(START, "generate_query_or_respond")
 
-    # Route based on tool calls
     workflow.add_conditional_edges(
         "generate_query_or_respond",
         tools_condition,
-        {
-            "tools": "retrieve",  # If tool call, go to retrieve
-            END: END,  # If no tool call, end (direct response)
-        },
+        {"tools": "retrieve", END: END},
     )
 
-    # After retrieval, always rerank
-    workflow.add_edge("retrieve", "rerank")
+    workflow.add_edge("retrieve", "extract_artifacts")
+    workflow.add_edge("extract_artifacts", "rerank")
 
-    # After reranking, grade documents
     workflow.add_conditional_edges(
         "rerank",
         grade_documents,
-        {
-            "generate": "generate",  # If relevant, generate answer
-            "rewrite": "rewrite",  # If not relevant, rewrite question
-        },
+        {"generate": "generate", "rewrite": "rewrite"},
     )
 
-    # After rewriting, try retrieval again
     workflow.add_edge("rewrite", "generate_query_or_respond")
-
-    # After generation, end
     workflow.add_edge("generate", END)
-
-    # Compile
     compile_params = {"checkpointer": checkpointer, "name": name}
     compile_params = {k: v for k, v in compile_params.items() if v is not None}
 
@@ -612,10 +435,6 @@ def create_enhanced_rag_graph(
 
     return compiled_graph
 
-
-# ============================================================================
-# Default Export
-# ============================================================================
 
 milvus_rag_agent_graph_pre = create_enhanced_rag_graph()
 
