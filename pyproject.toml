@@ -52,7 +52,7 @@ dependencies = [
     "duckduckgo-search>=8.0.4",
     "playwright>=1.53.0",
     "sentence-transformers>=5.0.0",
-    "posthog<7.0.0",
+    "posthog<8.0.0",
     "fastmcp>=2.10.2",
     "confluent-kafka>=2.11.0",
     "langchain-mcp-adapters>=0.1.11",
